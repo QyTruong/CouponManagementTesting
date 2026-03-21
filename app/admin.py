@@ -16,7 +16,7 @@ class CouponView(AdminView):
             'code': model.code,
             'value': model.value,
             'coupon_type': model.coupon_type,
-            'availability_count': model.availability_count,
+            'max_quantity': model.availability_count,
             'expiry_date': model.expiry_date,
         }, role=UserRole.ADMIN)
 

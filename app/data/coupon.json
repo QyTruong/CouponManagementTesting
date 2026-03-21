@@ -1,0 +1,25 @@
+[{
+  "code": "SALE10",
+  "value": 10000,
+  "coupon_type": "FIXED",
+  "max_quantity": 300,
+  "expiry_date": "2026-08-21 00:00:00"
+}, {
+  "code": "SALE20",
+  "value": 20000,
+  "coupon_type": "FIXED",
+  "max_quantity": 200,
+  "expiry_date": "2026-08-23 00:00:00"
+}, {
+  "code": "SALE15P",
+  "value": 15,
+  "coupon_type": "VARIABLE",
+  "max_quantity": 200,
+  "expiry_date": "2026-08-19 00:00:00"
+}, {
+  "code": "SALE40",
+  "value": 40,
+  "coupon_type": "VARIABLE",
+  "max_quantity": 250,
+  "expiry_date": "2026-08-26 00:00:00"
+}]
