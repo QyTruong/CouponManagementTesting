@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from sqlalchemy import Integer, Column, String, Boolean, DateTime, Enum, Float, ForeignKey
 from sqlalchemy.orm import relationship
@@ -26,7 +27,7 @@ class User(BaseModel):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
     user_role = Column(Enum(UserRole), default=UserRole.USER)
-    avatar = Column(String(50), nullable=False)
+    avatar = Column(String(100), default='https://res.cloudinary.com/dufzeox2u/image/upload/v1774111307/vy7vvzjny2affw6qcfoa.jpg')
     joined_date = Column(DateTime, default=datetime.now)
 
     orders = relationship('Order', backref='user', lazy=True)
@@ -40,7 +41,7 @@ class Coupon(BaseModel):
     code = Column(String(50), nullable=False)
     value = Column(Float, default=0)
     coupon_type = Column(Enum(CouponType), default=CouponType.FIXED)
-    availability_count = Column(Integer, default=0)
+    max_quantity = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     expiry_date = Column(DateTime, nullable=False)
@@ -85,3 +86,10 @@ if __name__ == '__main__':
     with app.app_context():
         db.drop_all()
         db.create_all()
+
+        with open('data/coupon.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for coupon in data:
+                c = Coupon(**coupon)
+                db.session.add(c)
+            db.session.commit()
