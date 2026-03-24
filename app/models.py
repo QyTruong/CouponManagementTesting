@@ -1,5 +1,8 @@
+import hashlib
 import json
 from datetime import datetime
+
+from flask_login import UserMixin
 from sqlalchemy import Integer, Column, String, Boolean, DateTime, Enum, Float, ForeignKey
 from sqlalchemy.orm import relationship
 from app import app, db
@@ -19,7 +22,7 @@ class BaseModel(db.Model):
     id = Column(Integer, primary_key=True)
 
 
-class User(BaseModel):
+class User(BaseModel, UserMixin):
     __tablename__ = 'user'
 
     active = Column(Boolean, default=True)
@@ -83,7 +86,7 @@ class Product(BaseModel):
         return self.name
 
 if __name__ == '__main__':
-    with app.app_context():
+    with (app.app_context()):
         db.drop_all()
         db.create_all()
 
@@ -93,3 +96,9 @@ if __name__ == '__main__':
                 c = Coupon(**coupon)
                 db.session.add(c)
             db.session.commit()
+
+        admin_password = '123456'
+        admin_password = str(hashlib.md5(admin_password.strip().encode('utf-8')).hexdigest())
+        admin = User(name='admin', username='admin', password=admin_password, user_role=UserRole.ADMIN)
+        db.session.add(admin)
+        db.session.commit()

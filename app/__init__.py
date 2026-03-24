@@ -1,17 +1,22 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+from flask_login import LoginManager
 import os
 import cloudinary.uploader
-from dotenv import load_dotenv
+
 
 app = Flask(__name__)
 load_dotenv()
 
-app.secret_key = os.getenv('SECRET_KEY')
+app.secret_key = os.getenv('APP_SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+app.config['PAGE_SIZE'] = 6
 
-db = SQLAlchemy(app)
+
+db = SQLAlchemy(app=app)
+login = LoginManager(app=app)
 
 cloudinary.config(
     cloud_name=os.getenv('CLOUDINARY_NAME'),

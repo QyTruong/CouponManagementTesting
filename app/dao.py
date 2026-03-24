@@ -11,30 +11,32 @@ def load_coupon():
 
     return query.all()
 
-def create_coupon(data, role):
+def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
     if role is not UserRole.ADMIN:
         raise ValueError('Chỉ có admin mới có thể tạo phiếu giảm giá')
-    if Coupon.query.filter(Coupon.code.__eq__(data['code'])).first():
+    if Coupon.query.filter(Coupon.code==code).first():
         raise ValueError('Mã phiếu giảm này đã tồn tại')
-    if data['expiry_date'] <= datetime.now():
+    if expiry_date <= datetime.now():
         raise ValueError('Thời hạn sử dụng phải sau ngày giờ hiện tại')
-    if data['max_quantity'] <= 0:
+    if max_quantity <= 0:
         raise ValueError('Số lượng phiếu phải lớn hơn 0')
-    if data['value'] <= 0:
+    if value <= 0:
         raise ValueError('Giá trị giảm phải lớn hơn 0')
-    if data['coupon_type'] == CouponType.VARIABLE and data['value'] > 50:
+    if coupon_type == CouponType.VARIABLE and value > 50:
         raise ValueError('Phiếu giảm giá với hình thức % không được vượt quá 50%')
-    if data['coupon_type'] == CouponType.FIXED and data['value'] < 1000:
+    if coupon_type == CouponType.FIXED and value < 1000:
         raise ValueError('Mệnh giá này không tồn tại')
 
-    c = Coupon(code=data['code'], value=data['value'], coupon_type=data['coupon_type'], max_quantity=data['max_quantity'], expiry_date=data['expiry_date'])
+    c = Coupon(code=code, value=value, coupon_type=coupon_type, max_quantity=max_quantity, expiry_date=expiry_date)
 
     db.session.add(c)
     try:
         db.session.commit()
-    except IntegrityError:
+        return c
+    except IntegrityError as ex:
         db.session.rollback()
-        raise Exception('Mã này đã tồn tại')
+        raise Exception(ex)
+
 
 def add_user(name, username, password, avatar=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
@@ -51,3 +53,11 @@ def add_user(name, username, password, avatar=None):
         db.session.rollback()
         raise Exception('Username này đã tồn tại')
 
+
+def get_user_by_id(id):
+    return User.query.get(id)
+
+
+def auth_user(username, password):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    return User.query.filter(User.username==username, User.password==password).first()
