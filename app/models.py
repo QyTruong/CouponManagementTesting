@@ -72,18 +72,30 @@ class OrderDetail(BaseModel):
     quantity = Column(Integer, default=0)
     price = Column(Float, default=0)
 
+class Category(BaseModel):
+    __tablename__ = 'category'
+
+    name = Column(String(50), nullable=False)
+    products = relationship('Product', backref='category', lazy=True)
+
+    def __str__(self):
+        return self.name
 
 class Product(BaseModel):
     __tablename__ = 'product'
 
     name = Column(String(50), nullable=False)
     price = Column(Float, default=0)
-    image = Column(String(100), nullable=False)
+    image = Column(String(100), default='https://res.cloudinary.com/dufzeox2u/image/upload/v1774405150/chkpnwr2cfwmqcqqxsea.jpg')
+    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
 
     details = relationship('OrderDetail', backref='product', lazy=True)
 
     def __str__(self):
         return self.name
+
+
+
 
 if __name__ == '__main__':
     with (app.app_context()):
@@ -96,6 +108,22 @@ if __name__ == '__main__':
                 c = Coupon(**coupon)
                 db.session.add(c)
             db.session.commit()
+
+        with open('data/category.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for category in data:
+                c = Category(**category)
+                db.session.add(c)
+            db.session.commit()
+
+        with open('data/product.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for product in data:
+                p = Product(**product)
+                db.session.add(p)
+            db.session.commit()
+
+
 
         admin_password = '123456'
         admin_password = str(hashlib.md5(admin_password.strip().encode('utf-8')).hexdigest())

@@ -8,10 +8,16 @@
 
 
       <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <ul class="navbar-nav">
+        <ul class="navbar-nav me-auto">
           <li class="nav-item">
             <a class="nav-link" href="/">Trang chủ</a>
           </li>
+          {% for c in categories %}
+          <li class="nav-item">
+            <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>
+          </li>
+          {% endfor %}
+
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <img src="{{ current_user.avatar }}" class="rounded-circle" width="40" />
@@ -28,7 +34,15 @@
               <a class="nav-link" href="/login">Đăng nhập</a>
             </li>
           {% endif %}
+
         </ul>
+        <li class="nav-item">
+          <a class="nav-link text-success" href="#">&#128722; <span class="badge bg-danger cart-counter">10</span></a>
+        </li>
+        <form class="d-flex" method="get" action="/">
+          <input class="form-control me-2" type="text" placeholder="Tìm sản phẩm..." name="kw" />
+          <button class="btn btn-primary" type="submit">Tìm</button>
+        </form>
       </div>
     </div>
 </nav>
