@@ -3,7 +3,7 @@ from datetime import datetime
 import cloudinary.uploader
 from sqlalchemy.exc import IntegrityError
 from app import app, db, utils
-from app.models import Coupon, UserRole, CouponType, User
+from app.models import Coupon, UserRole, CouponType, User, Product, Category
 
 
 def load_coupon():
@@ -37,6 +37,29 @@ def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
         db.session.rollback()
         raise Exception(ex)
 
+def load_products(kw=None, category_id=None, page=1):
+    query = Product.query
+
+    if kw:
+        query = query.filter(Product.name.contains(kw))
+
+    if category_id:
+        query = query.filter(Product.category_id == category_id)
+
+    if page:
+        start = (page - 1) * app.config['PAGE_SIZE']
+        query = query.slice(start, start + app.config['PAGE_SIZE'])
+
+    return query.all()
+
+
+def count_products():
+    return Product.query.count()
+
+
+def load_categories():
+    query = Category.query
+    return query.all()
 
 def add_user(name, username, password, avatar=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())

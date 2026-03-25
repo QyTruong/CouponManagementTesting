@@ -1,0 +1,86 @@
+[{
+  "name": "Áo thun",
+  "price": 300000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417204/ehzks18q0s2gzsbma7ci.jpg",
+  "category_id": 1
+}, {
+  "name": "Áo sơ mi",
+  "price": 270000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417200/uknvg6x4bitpbn6yhjqu.jpg",
+  "category_id": 1
+}, {
+  "name": "Áo blouse",
+  "price": 320000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417194/c2k82sc8uj1co583c8lq.jpg",
+  "category_id": 1
+}, {
+  "name": "Áo len",
+  "price": 290000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417203/o7kly7657ygoq8fjqunm.jpg",
+  "category_id": 1
+}, {
+  "name": "Hoodie",
+  "price": 400000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417197/vx3fayqdfjougevkxn9l.jpg",
+  "category_id": 1
+}, {
+  "name": "Áo khoác",
+  "price": 350000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417197/hjvpwbrsomseljqkgwtw.jpg",
+  "category_id": 1
+}, {
+  "name": "Áo choàng",
+  "price": 370000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417195/wc8kdl2rbem6kglhkpza.jpg",
+  "category_id": 1
+}, {
+  "name": "Quần jean",
+  "price": 450000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417198/c51y5r424znfmwzuqjb5.jpg",
+  "category_id": 2
+}, {
+  "name": "Quần dài",
+  "price": 420000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417204/cindp2mjq1t3ixpw4xxs.jpg",
+  "category_id": 2
+}, {
+  "name": "Quần ngắn",
+  "price": 340000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417201/xwvyuj5mh0daojjsgenh.jpg",
+  "category_id": 2
+}, {
+  "name": "Váy ngắn",
+  "price": 260000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417201/tspbc76epx0zpa9lpx6g.jpg",
+  "category_id": 2
+}, {
+  "name": "Giày thể thao",
+  "price": 430000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417203/wlg8xl86pfmrsdjdm7ck.jpg",
+  "category_id": 3
+}, {
+  "name": "Giày ống",
+  "price": 370000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417194/hvmi6jppuif9qvsod2f5.jpg",
+  "category_id": 3
+}, {
+  "name": "Dép nhà",
+  "price": 250000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417202/sjehqtlwaesi2coiawbb.jpg",
+  "category_id": 3
+}, {
+  "name": "Mũ",
+  "price": 170000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417196/v0o46bo5ix7z5gir22hz.jpg",
+  "category_id": 4
+}, {
+  "name": "Dây đai",
+  "price": 120000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417193/ab9yrblhplxg2k8hlyl0.jpg",
+  "category_id": 4
+}, {
+  "name": "Găng tay",
+  "price": 110000,
+  "image": "http://res.cloudinary.com/dufzeox2u/image/upload/v1774417195/qruamn2otre7d4c2n8lq.jpg",
+  "category_id": 4
+}]
