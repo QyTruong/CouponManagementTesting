@@ -62,6 +62,29 @@ def add_to_cart():
 
     return jsonify(utils.stats_cart(cart))
 
+@app.route('/api/cart/<id>', methods=['delete'])
+def delete_from_cart(id):
+    cart = session.get('cart')
+
+    if cart and id in cart:
+        del cart[id]
+
+    session['cart'] = cart
+
+    return jsonify(utils.stats_cart(cart))
+
+
+@app.route('/api/cart/<id>', methods=['put'])
+def update_cart(id):
+    cart = session.get('cart')
+
+    if cart and id in cart:
+        quantity = int(request.json.get('quantity'))
+        cart[id]['quantity'] = quantity
+
+    session['cart'] = cart
+
+    return jsonify(utils.stats_cart(cart))
 
 
 @app.route('/register')
