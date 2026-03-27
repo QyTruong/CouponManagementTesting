@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 import cloudinary.uploader
-from flask import render_template, request
+from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user
 from werkzeug.utils import redirect
 
@@ -26,8 +26,42 @@ def index():
 @app.context_processor
 def common_responses():
     return {
-        'categories' : load_categories()
+        'categories' : load_categories(),
+        'stats_cart' : utils.stats_cart(session.get('cart'))
     }
+
+
+@app.route('/cart')
+def cart_view():
+    return render_template('cart.html')
+
+@app.route('/api/cart', methods=['post'])
+def add_to_cart():
+    cart = session.get('cart')
+
+    if not cart:
+        cart = {}
+
+    id = str(request.json.get('id'))
+
+    if id in cart:
+        cart[id]['quantity'] += 1
+    else:
+        name = request.json.get('name')
+        price = request.json.get('price')
+        print(price)
+        cart[id] = {
+            "id": id,
+            "name": name,
+            "price": price,
+            "quantity": 1
+        }
+
+
+    session['cart'] = cart
+
+    return jsonify(utils.stats_cart(cart))
+
 
 
 @app.route('/register')
@@ -82,11 +116,19 @@ def logout_process():
     logout_user()
     return redirect('/login')
 
+@app.route('/clear-session')
+def clear_session():
+    session.clear()
+    return "Session cleared!"
 
 if __name__ == '__main__':
     from app.admin import admin
 
     app.run(debug=True)
+
+
+
+
 
     # with app.app_context():
     #     # resp = cloudinary.uploader.upload('default_product.jpg')
