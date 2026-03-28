@@ -42,6 +42,7 @@ class Coupon(BaseModel):
     __tablename__ = 'coupon'
 
     code = Column(String(50), nullable=False)
+    active = Column(Boolean, default=True)
     value = Column(Float, default=0)
     coupon_type = Column(Enum(CouponType), default=CouponType.FIXED)
     max_quantity = Column(Integer, default=0)
@@ -123,10 +124,16 @@ if __name__ == '__main__':
                 db.session.add(p)
             db.session.commit()
 
-
-
         admin_password = '123456'
         admin_password = str(hashlib.md5(admin_password.strip().encode('utf-8')).hexdigest())
         admin = User(name='admin', username='admin', password=admin_password, user_role=UserRole.ADMIN)
         db.session.add(admin)
         db.session.commit()
+
+        with open('data/order.json', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            for order in data:
+                o = Order(**order)
+                db.session.add(o)
+            db.session.commit()
+

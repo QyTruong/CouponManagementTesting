@@ -1,9 +1,10 @@
 import hashlib
 from datetime import datetime
 import cloudinary.uploader
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app import app, db, utils
-from app.models import Coupon, UserRole, CouponType, User, Product, Category
+from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order
 
 
 def load_coupon():
@@ -60,6 +61,20 @@ def count_products():
 def load_categories():
     query = Category.query
     return query.all()
+
+def load_coupons(kw=None):
+    query = Coupon.query.filter(Coupon.active==True)
+
+    if kw:
+        query = query.filter(Coupon.code.contains(kw))
+
+    return query.all()
+
+def count_used_coupons():
+    query = db.session.query(Order.coupon_id, func.count(Order.id))\
+            .group_by(Order.coupon_id)
+    return query.all()
+
 
 def add_user(name, username, password, avatar=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())

@@ -3,7 +3,7 @@
 {% block title %}Giỏ hàng{% endblock %}
 
 {% block content %}
-<h1 class="text-center text-success">GIỎ HÀNG</h1>
+<h1 class="text-center text-success mt-3">GIỎ HÀNG</h1>
 
 {% if 'cart' in session %}
 <table class="table">
@@ -26,11 +26,20 @@
     {% endfor %}
 </table>
 
-<div>
-    <h2>Số lượng sản phẩm: <span class="cart-counter">{{ stats_cart.total_quantity }}</span></h2>
-    <h2>Tổng tiền: <span class="cart-amount">{{ "{:,.0f}".format(stats_cart.total_price) }} VNĐ</span></h2>
-</div>
+<div class="d-flex flex-row gap-3">
+    <div class="col-md-6 col-xs-12 alert alert-info">
+        <h2>Nhập mã khuyến mãi</h2>
+        <input class="p-2" type="text" placeholder="Nhập mã khuyến mãi..."/>
+        <button class="btn btn-danger">Áp dụng</button>
+    </div>
+    <div class="col-md-6 col-xs-12 alert alert-success">
+        <h2>Số lượng sản phẩm: <span class="cart-counter">{{ stats_cart.total_quantity }}</span></h2>
+        <h2>Tổng tiền: <span class="cart-amount">{{ "{:,.0f}".format(stats_cart.total_price) }} VNĐ</span></h2>
+    </div>
 
+</div>
+{% else %}
+<h2>Không có sản phẩm nào trong giỏ hàng !!!</h2>
 {% endif %}
 
 {% endblock %}
