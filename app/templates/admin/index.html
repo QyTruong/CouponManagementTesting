@@ -3,7 +3,7 @@
 {% block body %}
 
 {% if current_user.is_authenticated %}
-<h1 class="text-info mt-1">Welcome to administrator page</h1>
+<h1 class="text-center text-info mt-1">Chào mừng {{ current_user.name }} đến với trang quản trị</h1>
 
 {% else %}
 <h1 class="text-success text-center">Đăng nhập quản trị</h1>

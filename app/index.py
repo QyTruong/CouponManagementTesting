@@ -8,8 +8,9 @@ from flask_login import login_user, logout_user
 from werkzeug.utils import redirect
 
 from app import app, dao, utils, db, login
-from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories
-from app.models import CouponType, UserRole
+from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
+    count_used_coupons
+from app.models import CouponType, UserRole, Coupon
 
 
 @app.route('/')
@@ -61,6 +62,15 @@ def add_to_cart():
     session['cart'] = cart
 
     return jsonify(utils.stats_cart(cart))
+
+@app.route('/coupons', methods=['get'])
+def coupon_view():
+    kw = request.args.get('kw')
+
+    used = [c for c in count_used_coupons()]
+    coupons = zip(load_coupons(kw=kw), used)
+
+    return render_template('coupon.html', coupons=coupons)
 
 @app.route('/api/cart/<id>', methods=['delete'])
 def delete_from_cart(id):
