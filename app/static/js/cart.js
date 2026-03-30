@@ -15,9 +15,17 @@ function addToCart(id, name, price){
         for (let e of elems)
             e.innerText = data.total_quantity
 
-        let amounts = document.getElementsByClassName('cart-amount')
-        for (let a of amounts)
-            a.innerText = data.total_price.toLocaleString('en') + " VNĐ"
+        let basePrices = document.getElementsByClassName('base-price')
+        for (let b of basePrices)
+            b.innerText = data.base_price.toLocaleString('en') + " VNĐ"
+
+        let discountValues = document.getElementsByClassName('discount-value')
+        for (let d of discountValues)
+            d.innerText = data.discount_value.toLocaleString('en') + " VNĐ"
+
+        let totalPrices = document.getElementsByClassName('total-price')
+        for (let t of totalPrices)
+            t.innerText = data.total_price.toLocaleString('en') + " VNĐ"
     })
 }
 
@@ -30,9 +38,17 @@ function deleteFromCart(id){
             for (let e of elems)
                 e.innerText = data.total_quantity
 
-            let amounts = document.getElementsByClassName('cart-amount')
-            for (let a of amounts)
-                a.innerText = data.total_price.toLocaleString('en') + " VNĐ"
+            let basePrices = document.getElementsByClassName('base-price')
+            for (let b of basePrices)
+                b.innerText = data.base_price.toLocaleString('en') + " VNĐ"
+
+            let discountValues = document.getElementsByClassName('discount-value')
+            for (let d of discountValues)
+                d.innerText = data.discount_value.toLocaleString('en') + " VNĐ"
+
+            let totalPrices = document.getElementsByClassName('total-price')
+            for (let t of totalPrices)
+                t.innerText = data.total_price.toLocaleString('en') + " VNĐ"
 
             let item = document.getElementById(`cart${id}`)
             item.style.display = "none"
@@ -54,8 +70,16 @@ function updateCart(id, object){
         for (let e of elems)
             e.innerText = data.total_quantity
 
-        let amounts = document.getElementsByClassName('cart-amount')
-        for (let a of amounts)
-            a.innerText = data.total_price.toLocaleString('en') + " VNĐ"
+        let basePrices = document.getElementsByClassName('base-price')
+        for (let b of basePrices)
+            b.innerText = data.base_price.toLocaleString('en') + " VNĐ"
+
+        let discountValues = document.getElementsByClassName('discount-value')
+        for (let d of discountValues)
+            d.innerText = data.discount_value.toLocaleString('en') + " VNĐ"
+
+        let totalPrices = document.getElementsByClassName('total-price')
+        for (let t of totalPrices)
+            t.innerText = data.total_price.toLocaleString('en') + " VNĐ"
     })
 }
