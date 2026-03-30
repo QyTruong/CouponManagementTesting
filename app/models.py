@@ -16,6 +16,10 @@ class CouponType(Type):
     FIXED = 1
     VARIABLE = 2
 
+class OrderStatus(Type):
+    PROCESSING = 1
+    PAID = 2
+
 class BaseModel(db.Model):
     __abstract__ = True
 
@@ -60,6 +64,7 @@ class Order(BaseModel):
 
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     coupon_id = Column(Integer, ForeignKey('coupon.id'), nullable=True)
+    status = Column(Enum(OrderStatus), default=OrderStatus.PROCESSING)
     total_price = Column(Float, default=0)
     discount = Column(Float, default=0)
     final_price = Column(Float, default=0)
