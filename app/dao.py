@@ -1,9 +1,10 @@
 import hashlib
 from datetime import datetime
 import cloudinary.uploader
+from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from app import app, db, utils
+from app import app, db
 from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order
 
 
@@ -74,6 +75,14 @@ def count_used_coupons():
     query = db.session.query(Order.coupon_id, func.count(Order.id))\
             .group_by(Order.coupon_id)
     return query.all()
+
+def count_used_coupon(id):
+    return db.session.query(Order.coupon_id, func.count(Order.id))\
+                    .filter(Order.coupon_id==id)\
+                    .group_by(Order.coupon_id).first()
+
+def get_coupon_by_code(code):
+    return Coupon.query.filter(Coupon.code==code).first()
 
 
 def add_user(name, username, password, avatar=None):

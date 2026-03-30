@@ -1,16 +1,13 @@
 import math
-import os
 from datetime import datetime
-
-import cloudinary.uploader
 from flask import render_template, request, session, jsonify
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from werkzeug.utils import redirect
 
 from app import app, dao, utils, db, login
 from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons
-from app.models import CouponType, UserRole, Coupon
+    count_used_coupons, get_coupon_by_code, count_used_coupon
+
 
 
 @app.route('/')
@@ -34,6 +31,9 @@ def common_responses():
 
 @app.route('/cart')
 def cart_view():
+    coupon_slot = {}
+    session['coupon_slot'] = coupon_slot
+
     return render_template('cart.html')
 
 @app.route('/api/cart', methods=['post'])
@@ -50,27 +50,19 @@ def add_to_cart():
     else:
         name = request.json.get('name')
         price = request.json.get('price')
-        print(price)
+
         cart[id] = {
             "id": id,
             "name": name,
             "price": price,
-            "quantity": 1
+            "quantity": 1,
         }
 
 
     session['cart'] = cart
 
-    return jsonify(utils.stats_cart(cart))
+    return jsonify(utils.stats_cart(cart=cart, coupon=session.get('coupon_slot')))
 
-@app.route('/coupons', methods=['get'])
-def coupon_view():
-    kw = request.args.get('kw')
-
-    used = [c for c in count_used_coupons()]
-    coupons = zip(load_coupons(kw=kw), used)
-
-    return render_template('coupon.html', coupons=coupons)
 
 @app.route('/api/cart/<id>', methods=['delete'])
 def delete_from_cart(id):
@@ -81,7 +73,7 @@ def delete_from_cart(id):
 
     session['cart'] = cart
 
-    return jsonify(utils.stats_cart(cart))
+    return jsonify(utils.stats_cart(cart=cart, coupon=session.get('coupon_slot')))
 
 
 @app.route('/api/cart/<id>', methods=['put'])
@@ -94,8 +86,65 @@ def update_cart(id):
 
     session['cart'] = cart
 
-    return jsonify(utils.stats_cart(cart))
+    return jsonify(utils.stats_cart(cart=cart, coupon=session.get('coupon_slot')))
 
+@app.route('/coupons', methods=['get'])
+def coupon_view():
+    kw = request.args.get('kw')
+
+    used = [c for c in count_used_coupons()]
+    coupons = zip(load_coupons(kw=kw), used)
+
+    return render_template('coupon.html', coupons=coupons)
+
+@app.route('/api/coupons', methods=['post'])
+def apply_coupon_to_cart():
+    cart = session.get('cart')
+    code = request.json.get('code')
+
+    try:
+        if cart:
+            if not current_user.is_authenticated:
+                raise ValueError('Bạn phải đăng nhập để có thể sử dụng phiếu giảm giá')
+
+            coupon = get_coupon_by_code(code=code)
+
+            if coupon:
+                if datetime.now() > coupon.expiry_date:
+                    raise ValueError('Mã này hiện đã hết hạn, không áp dụng được')
+
+                coupon_count = count_used_coupon(id=coupon.id)
+
+                if coupon_count[1] >= coupon.max_quantity:
+                    raise ValueError('Mã giảm giá này đã hết, không thể sử dụng được')
+
+                coupon_slot = session.get('coupon_slot')
+
+                if not coupon_slot:
+                    coupon_slot = {
+                        'code': code,
+                        'value': coupon.value,
+                        'coupon_type': coupon.coupon_type.value,
+                    }
+                else:
+                    coupon_slot['code'] = code
+                    coupon_slot['value'] = coupon.value
+                    coupon_slot['coupon_type'] = coupon.coupon_type.value
+
+                session['coupon_slot'] = coupon_slot
+
+            else:
+                coupon_slot = {}
+                session['coupon_slot'] = coupon_slot
+
+                raise ValueError('Mã này không tồn tại')
+
+            return jsonify({'status': 200} | utils.stats_cart(cart, coupon=coupon_slot))
+
+        return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại !!'})
+
+    except Exception as e:
+        return jsonify({'status': 400, 'err_msg': str(e)})
 
 @app.route('/register')
 def register_view():
@@ -112,7 +161,6 @@ def register_process():
         return render_template('register.html', err_msg='Mật khẩu không khớp')
 
     try:
-        print(request.files.get('avatar'))
         add_user(name=data.get('name'), username=data.get('username'), password=password,
                  avatar=request.files.get('avatar'))
         return redirect('/login')
@@ -158,6 +206,7 @@ if __name__ == '__main__':
     from app.admin import admin
 
     app.run(debug=True)
+
 
 
 
