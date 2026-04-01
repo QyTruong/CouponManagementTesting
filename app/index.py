@@ -6,8 +6,7 @@ from werkzeug.utils import redirect
 
 from app import app, dao, utils, db, login
 from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, count_used_coupon
-
+    count_used_coupons, get_coupon_by_code, count_used_coupon, add_order, apply_coupon
 
 
 @app.route('/')
@@ -25,14 +24,12 @@ def index():
 def common_responses():
     return {
         'categories' : load_categories(),
-        'stats_cart' : utils.stats_cart(session.get('cart'))
+        'stats_cart' : utils.stats_cart(session.get('cart'), session.get('coupon_slot'))
     }
 
 
 @app.route('/cart')
 def cart_view():
-    coupon_slot = {}
-    session['coupon_slot'] = coupon_slot
 
     return render_template('cart.html')
 
@@ -104,21 +101,9 @@ def apply_coupon_to_cart():
 
     try:
         if cart:
-            if not current_user.is_authenticated:
-                raise ValueError('Bạn phải đăng nhập để có thể sử dụng phiếu giảm giá')
-
-            coupon = get_coupon_by_code(code=code)
-
-            if coupon:
-                if datetime.now() > coupon.expiry_date:
-                    raise ValueError('Mã này hiện đã hết hạn, không áp dụng được')
-
-                coupon_count = count_used_coupon(id=coupon.id)
-
-                if coupon_count[1] >= coupon.max_quantity:
-                    raise ValueError('Mã giảm giá này đã hết, không thể sử dụng được')
-
+            try:
                 coupon_slot = session.get('coupon_slot')
+                coupon = apply_coupon(code=code, coupon_slot=coupon_slot)
 
                 if not coupon_slot:
                     coupon_slot = {
@@ -126,24 +111,49 @@ def apply_coupon_to_cart():
                         'value': coupon.value,
                         'coupon_type': coupon.coupon_type.value,
                     }
-                else:
-                    coupon_slot['code'] = code
-                    coupon_slot['value'] = coupon.value
-                    coupon_slot['coupon_type'] = coupon.coupon_type.value
 
                 session['coupon_slot'] = coupon_slot
 
-            else:
-                coupon_slot = {}
-                session['coupon_slot'] = coupon_slot
-
-                raise ValueError('Mã này không tồn tại')
+            except Exception as e:
+                return jsonify({'status': 400, 'err_msg': str(e)})
 
             return jsonify({'status': 200} | utils.stats_cart(cart, coupon=coupon_slot))
 
         return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại !!'})
 
     except Exception as e:
+        return jsonify({'status': 400, 'err_msg': str(e)})
+
+
+@app.route('/api/coupons', methods=['delete'])
+def detach_coupon():
+    coupon_slot = session.get('coupon_slot')
+
+    if coupon_slot:
+        session.pop('coupon_slot', None)
+        return jsonify({'status': 200})
+
+    return jsonify({'status': 400})
+
+
+@app.route('/api/order', methods=['post'])
+def order():
+    cart = session.get('cart')
+    coupon_slot = session.get('coupon_slot')
+
+    try:
+        if coupon_slot:
+            coupon = get_coupon_by_code(code=coupon_slot['code'])
+            add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart, coupon=coupon_slot), coupon=coupon)
+            del session['coupon_slot']
+        else:
+            add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart))
+
+        del session['cart']
+
+        return jsonify({'status': 200})
+    except Exception as e:
+        print(e)
         return jsonify({'status': 400, 'err_msg': str(e)})
 
 @app.route('/register')
