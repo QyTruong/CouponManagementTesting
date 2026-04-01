@@ -5,7 +5,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app import app, db
-from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order
+from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail
 
 
 def load_coupon():
@@ -13,6 +13,8 @@ def load_coupon():
 
     return query.all()
 
+
+# Tạo mã giảm giá
 def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
     if role is not UserRole.ADMIN:
         raise ValueError('Chỉ có admin mới có thể tạo phiếu giảm giá')
@@ -84,6 +86,46 @@ def count_used_coupon(id):
 def get_coupon_by_code(code):
     return Coupon.query.filter(Coupon.code==code).first()
 
+
+# Áp dụng mã giảm giá
+def apply_coupon(code, coupon_slot):
+    if not current_user.is_authenticated:
+        raise ValueError('Bạn phải đăng nhập để có thể sử dụng phiếu giảm giá')
+
+    if coupon_slot:
+        raise ValueError('Mỗi đơn hàng chỉ được áp dụng 1 mã duy nhất, vui lòng hãy gỡ mã đã áp dụng trước đó')
+
+    coupon = get_coupon_by_code(code=code)
+
+    if coupon:
+        if datetime.now() > coupon.expiry_date:
+            raise ValueError('Mã này hiện đã hết hạn, không áp dụng được')
+
+        coupon_count = count_used_coupon(id=coupon.id)
+
+        if coupon_count[1] >= coupon.max_quantity:
+            raise ValueError('Mã giảm giá này đã hết, không thể sử dụng được')
+    else:
+        raise ValueError('Mã này không tồn tại')
+
+    return coupon
+
+
+
+def add_order(cart, cart_stats, coupon=None):
+    if cart:
+        total_price = cart_stats['base_price']
+        discount = cart_stats['discount_value']
+        final_price = cart_stats['total_price']
+
+        o = Order(user=current_user, coupon=coupon, total_price=total_price, discount=discount, final_price=final_price)
+        db.session.add(o)
+
+        for ca in cart.values():
+            d = OrderDetail(quantity=ca['quantity'], price=ca['price'], product_id=ca['id'], order=o)
+            db.session.add(d)
+
+        db.session.commit()
 
 def add_user(name, username, password, avatar=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())

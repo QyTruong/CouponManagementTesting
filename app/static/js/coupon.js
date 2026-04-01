@@ -23,9 +23,24 @@ function applyCoupon(){
             let totalPrices = document.getElementsByClassName('total-price')
             for (let t of totalPrices)
                 t.innerText = data.total_price.toLocaleString('en') + " VNĐ"
+
+            location.reload()
         }
         else {
-            console.log(data.err_msg)
+            alert(data.err_msg)
         }
+    })
+}
+
+function detachCoupon(){
+    fetch("/api/coupons", {
+        method: "delete"
+    }).then(res => res.json()).then(data => {
+        if (data.status == 200){
+            alert("Đã gỡ mã giảm giá ra khỏi đơn hàng")
+            location.reload()
+        }
+        else
+            alert("Gỡ mã thất bại")
     })
 }

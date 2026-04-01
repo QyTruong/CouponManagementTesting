@@ -29,8 +29,12 @@
 <div class="d-flex flex-row gap-3">
     <div class="col-md-6 col-xs-12 alert alert-info">
         <h2>Nhập mã khuyến mãi</h2>
-        <input id="code" class="p-2" type="text" placeholder="Nhập mã khuyến mãi..."/>
-        <button class="btn btn-danger" onclick="applyCoupon()">Áp dụng</button>
+        <input id="code" value="{{ session.get('coupon_slot')['code'] }}" class="p-2" type="text" placeholder="Nhập mã khuyến mãi..."/>
+        <button class="btn btn-primary" onclick="applyCoupon()">Áp dụng</button>
+        <p>Mã hiện tại bạn đang áp dụng: <span>{{ session.get('coupon_slot')['code'] }}</span></p>
+        {% if session.get('coupon_slot')['code'] %}
+        <button class="btn btn-danger" onclick="detachCoupon()" >Gỡ mã</button>
+        {% endif %}
     </div>
     <div class="col-md-6 col-xs-12 alert alert-success">
         <h2>Số lượng sản phẩm: <span class="cart-counter">{{ stats_cart.total_quantity }}</span></h2>
@@ -38,8 +42,9 @@
         <h2>Giá trị được giảm: <span class="discount-value">{{ "{:,.0f}".format(stats_cart.discount_value) }} VNĐ</span></h2>
         <h2>Tổng tiền: <span class="total-price">{{ "{:,.0f}".format(stats_cart.total_price) }} VNĐ</span></h2>
     </div>
-
 </div>
+
+<button class="btn btn-success w-100" onclick="order()">Đặt hàng</button>
 {% else %}
 <h2>Không có sản phẩm nào trong giỏ hàng !!!</h2>
 {% endif %}

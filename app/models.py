@@ -45,7 +45,7 @@ class User(BaseModel, UserMixin):
 class Coupon(BaseModel):
     __tablename__ = 'coupon'
 
-    code = Column(String(50), nullable=False)
+    code = Column(String(50), nullable=False, unique=True)
     active = Column(Boolean, default=True)
     value = Column(Float, default=0)
     coupon_type = Column(Enum(CouponType), default=CouponType.FIXED)
