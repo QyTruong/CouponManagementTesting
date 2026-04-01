@@ -1,12 +1,11 @@
 import math
 from datetime import datetime
 from flask import render_template, request, session, jsonify
-from flask_login import login_user, logout_user, current_user
+from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
-
-from app import app, dao, utils, db, login
-from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, count_used_coupon, add_order, apply_coupon
+from app import app, dao, utils, login
+from app.dao import add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
+    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id
 
 
 @app.route('/')
@@ -136,6 +135,12 @@ def detach_coupon():
     return jsonify({'status': 400})
 
 
+@app.route('/orders', methods=['get'])
+def orders_view():
+    orders = load_orders_by_user_id(current_user.id)
+
+    return render_template('order_list.html', orders=orders)
+
 @app.route('/api/order', methods=['post'])
 def order():
     cart = session.get('cart')
@@ -155,6 +160,7 @@ def order():
     except Exception as e:
         print(e)
         return jsonify({'status': 400, 'err_msg': str(e)})
+
 
 @app.route('/register')
 def register_view():

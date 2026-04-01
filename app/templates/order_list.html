@@ -1,0 +1,49 @@
+{% extends 'layout/base.html' %}
+
+{% block title %}Đơn hàng{% endblock %}
+
+{% block content %}
+<h1 class="text-success text-center">Danh sách đơn hàng</h1>
+
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
+{% endif %}
+
+{% if orders %}
+<table class="table">
+    <tr>
+        <th>Mã đơn hàng</th>
+        <th>Tên khách hàng</th>
+        <th>Tên mã giảm giá</th>
+        <th>Tổng tiền</th>
+        <th>Giá trị giảm</th>
+        <th>Thành tiền</th>
+        <th>Trạng thái</th>
+    </tr>
+    {% for o in orders %}
+    <tr>
+        <td>{{ o.id }}</td>
+        <td>{{ o.user.name }}</td>
+        {% if o.coupon.code %}
+        <td>{{ o.coupon.code }}</td>
+        {% else %}
+        <td>Không có</td>
+        {% endif %}
+        <td>{{ "{:,.0f}".format(o.total_price) }} VNĐ</td>
+        <td>{{ "{:,.0f}".format(o.discount) }} VNĐ</td>
+        <td>{{ "{:,.0f}".format(o.final_price) }} VNĐ</td>
+        {% if o.status.name == 'PROCESSING' %}
+        <td>
+            <button class="btn btn-primary">Thanh toán</button>
+        </td>
+        {% else %}
+        <td>Đã thanh toán</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<h2>Không có đơn hàng nào</h2>
+{% endif %}
+
+{% endblock %}
