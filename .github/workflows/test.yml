@@ -1,9 +1,9 @@
 name: Run Tests for Coupon Management
 on:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 jobs:
   test:
     runs-on: ubuntu-latest

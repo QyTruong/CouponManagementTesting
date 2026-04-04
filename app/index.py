@@ -10,6 +10,9 @@ from werkzeug.utils import redirect
 from app import app, dao, utils, db, login
 from app.dao import create_coupon, add_user, auth_user, load_products, count_products, load_categories
 from app.models import CouponType, UserRole
+from dotenv import  load_dotenv
+
+load_dotenv()
 
 
 @app.route('/')
