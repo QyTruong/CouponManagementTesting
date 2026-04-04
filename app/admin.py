@@ -1,10 +1,10 @@
 from flask import flash
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
-from flask_login import current_user, logout_user
+from flask_login import current_user, logout_user, login_required
 from werkzeug.utils import redirect
 from app import app, db
-from app.dao import create_coupon
+from app.dao import create_coupon, delete_coupon
 from app.models import UserRole, Coupon, Product, Category, User
 
 
@@ -32,7 +32,7 @@ class CategoryView(AdminView):
     column_searchable_list = ['name']
 
 class CouponView(AdminView):
-    column_list = ['id', 'code', 'coupon_type', 'value', 'max_quantity','created_at', 'expiry_date']
+    column_list = ['id', 'code', 'active','coupon_type', 'value', 'max_quantity','created_at', 'expiry_date']
     column_filters = ['code', 'created_at', 'expiry_date']
     column_searchable_list = ['code', 'created_at', 'expiry_date']
     column_sortable_list = ['value', 'expiry_date']
@@ -41,18 +41,33 @@ class CouponView(AdminView):
     page_size = 10
 
 
+    # http://127.0.0.1:5000/admin/coupon/new/
     def create_model(self, form):
         try:
-            return create_coupon(
+            coupon = create_coupon(
                 code = form.data['code'],
                 value = form.data['value'],
                 coupon_type= form.data['coupon_type'],
                 max_quantity= form.data['max_quantity'],
                 expiry_date= form.data['expiry_date'],
-                role=UserRole.ADMIN)
-        except ValueError as e:
+                role=current_user.user_role)
+
+            return coupon
+
+        except Exception as e:
             flash(str(e), "error")
             return False
+
+
+    def delete_model(self, model):
+        try:
+            delete_coupon(coupon=model, role=current_user.user_role)
+
+        except Exception as ex:
+            flash(str(ex), "error")
+            return False
+
+        return True
 
 class LogoutView(BaseView):
     @expose('/')

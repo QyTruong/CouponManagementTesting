@@ -13,3 +13,13 @@ function order(){
         })
     }
 }
+
+function pay(){
+    fetch("/create-checkout-session", {
+        method: "post",
+    }).then(res => res.json()).then(data => {
+        if (data.status === 303){
+            window.location = data.url
+        }
+    })
+}
