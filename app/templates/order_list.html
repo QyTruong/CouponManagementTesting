@@ -34,7 +34,7 @@
         <td>{{ "{:,.0f}".format(o.final_price) }} VNĐ</td>
         {% if o.status.name == 'PROCESSING' %}
         <td>
-            <button class="btn btn-primary">Thanh toán</button>
+            <button class="btn btn-primary" onclick="pay()">Thanh toán</button>
         </td>
         {% else %}
         <td>Đã thanh toán</td>

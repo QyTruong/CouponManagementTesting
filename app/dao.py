@@ -5,7 +5,7 @@ from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app import app, db
-from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail
+from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail, OrderStatus
 
 
 def load_coupon():
@@ -40,6 +40,22 @@ def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
     except IntegrityError as ex:
         db.session.rollback()
         raise Exception(ex)
+
+
+# Xóa mã giảm giá
+def delete_coupon(coupon, role):
+    if role is not UserRole.ADMIN:
+        raise ValueError("Chỉ có admin mới được xóa mã giảm giá")
+
+    order_in_processing = Order.query.filter(Order.coupon_id==coupon.id,
+                                             Order.status==OrderStatus.PROCESSING).first()
+
+    if order_in_processing:
+        raise ValueError("Không thể xóa mã giảm giá này, vì vẫn đang tồn tại đơn hàng đang xử lý")
+
+    coupon.active = False
+    db.session.commit()
+
 
 def load_products(kw=None, category_id=None, page=1):
     query = Product.query
