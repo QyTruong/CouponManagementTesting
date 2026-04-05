@@ -23,7 +23,7 @@ def test_session(test_app):
     yield db.session
     db.session.rollback()
 
-@pytest.fixture()
+@pytest.fixture
 def sample_products(test_session):
     p1 = Product(name='Áo thun', price=20000, category_id=1)
     p2 = Product(name='Áo Hoodie', price=50000, category_id=1)
@@ -40,7 +40,7 @@ def sample_products(test_session):
     return p1,p2,p3,p4,p5,p6,p7,p8,p9
 
 
-def test_kw_products(sample_products)  :
+def test_kw_products(sample_products):
     actual_product = dao.load_products(kw='Áo thun')
 
     assert len(actual_product) == 1
