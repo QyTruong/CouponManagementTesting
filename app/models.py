@@ -4,8 +4,10 @@ from datetime import datetime
 from flask_login import UserMixin
 from sqlalchemy import Integer, Column, String, Boolean, DateTime, Enum, Float, ForeignKey
 from sqlalchemy.orm import relationship
-from app import app, db
+from app import create_app, db
 from enum import Enum as Type
+
+app = create_app()
 
 class UserRole(Type):
     ADMIN = 1

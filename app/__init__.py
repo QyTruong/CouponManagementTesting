@@ -6,22 +6,37 @@ import os
 import cloudinary.uploader
 import stripe
 
-app = Flask(__name__)
-load_dotenv()
+db = SQLAlchemy()
+login = LoginManager()
 
-app.secret_key = os.getenv('APP_SECRET_KEY')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['PAGE_SIZE'] = 6
-app.config['MY_DOMAIN'] = 'http://localhost:4242'
+def create_app(test_config=None):
+    app = Flask(__name__)
+    load_dotenv()
 
-db = SQLAlchemy(app=app)
-login = LoginManager(app=app)
+    app.secret_key = os.getenv('APP_SECRET_KEY')
 
-cloudinary.config(
-    cloud_name=os.getenv('CLOUDINARY_NAME'),
-    api_key=os.getenv('CLOUDINARY_API_KEY'),
-    api_secret=os.getenv('CLOUDINARY_SECRET_KEY')
-)
+    if test_config:
+        app.config.update(test_config)
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config['PAGE_SIZE'] = 6
+
+    db.init_app(app=app)
+    login.init_app(app=app)
+
+    cloudinary.config(
+        cloud_name=os.getenv('CLOUDINARY_NAME'),
+        api_key=os.getenv('CLOUDINARY_API_KEY'),
+        api_secret=os.getenv('CLOUDINARY_SECRET_KEY')
+    )
+
+    return app
+
+
+
+
+
 
 
