@@ -14,12 +14,17 @@ function order(){
     }
 }
 
-function pay(){
-    fetch("/create-checkout-session", {
+function pay(order_id){
+    fetch(`/payment/${order_id}`, {
         method: "post",
     }).then(res => res.json()).then(data => {
         if (data.status === 303){
-            window.location = data.url
+            console.log("hello")
+            window.location.href = data.url
+        }
+        else {
+            console.log('bruh')
+            console.log(data.error)
         }
     })
 }
