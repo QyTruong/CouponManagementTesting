@@ -11,7 +11,7 @@ class StripePayment:
         self.success_url = 'http://localhost:4242/success'
         self.cancel_url = 'http://localhost:4242/cancel'
 
-    def create_payment(self, metadata, coupon_id):
+    def create_payment(self, metadata):
         try:
             checkout_session = self.stripe.checkout.Session.create(
                 line_items= self.items,

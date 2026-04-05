@@ -241,7 +241,6 @@ def create_checkout_session(order_id):
         metadata = {
             "order_id": order_id,
             "user_id": order.user.id,
-            "coupon_code": order.coupon.code if order.coupon else None
         }
 
         stripe_payment = StripePayment(items=items)
