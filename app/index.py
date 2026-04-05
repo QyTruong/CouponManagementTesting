@@ -1,15 +1,15 @@
 import math
-import os
 from datetime import datetime
-
-import stripe
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
-from app import app, dao, utils, login
+from app import create_app, dao, utils, login
 from app.dao import add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id
+    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id
+from app.payment import StripePayment
 
+
+app = create_app()
 
 @app.route('/')
 def index():
@@ -222,45 +222,53 @@ def clear_session():
     return "Session cleared!"
 
 
-# @app.route('/create-checkout-session', methods=['POST'])
-# def create_checkout_session():
-#     stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
-#
-#     try:
-#         checkout_session = stripe.checkout.Session.create(
-#             line_items=[
-#                 {
-#                     'price_data': {
-#                         'currency': 'vnd',
-#                         'product_data': {
-#                             'name': 'Order from my shop',
-#                         },
-#                         'unit_amount': 100000,
-#                     },
-#                     'quantity': 1,
-#                 },
-#             ],
-#             mode='payment',
-#             success_url=app.config['MY_DOMAIN'] + '/success',
-#         )
-#     except Exception as e:
-#         return str(e)
-#
-#     return jsonify({'status': 303, 'url': checkout_session.url})
-#
-#
-# @app.route('/success', methods=['GET'])
-# def pay_success():
-#     return render_template('/payment/success_page.html')
-#
-# @app.route('/cancel', methods=['GET'])
-# def pay_cancel():
-#     return render_template('payment/cancel_page.html')
+@app.route('/payment/<order_id>', methods=['POST'])
+def create_checkout_session(order_id):
+    try:
+        order = load_order_by_id(id=order_id)
+
+        items = [{
+            "price_data": {
+                "currency": "vnd",
+                "product_data": {
+                    "name": f"Order #{order.id}"
+                },
+                "unit_amount": int(order.final_price)
+            },
+            "quantity": 1
+        }]
+
+        metadata = {
+            "order_id": order_id,
+            "user_id": order.user.id,
+            "coupon_code": order.coupon.code if order.coupon else None
+        }
+
+        stripe_payment = StripePayment(items=items)
+        checkout_session = stripe_payment.create_payment(metadata=metadata)
+
+    except Exception as e:
+        return jsonify({"status": 500, "error": str(e)})
+
+    return jsonify({'status': 303, 'url': checkout_session})
+
+
+@app.route('/success', methods=['GET'])
+def pay_success():
+    return render_template('/payment/success_page.html')
+
+@app.route('/cancel', methods=['GET'])
+def pay_cancel():
+    return render_template('payment/cancel_page.html')
 
 if __name__ == '__main__':
     from app.admin import admin
 
     app.run(debug=True, port=4242)
+
+    # with app.app_context():
+    #     o = load_order_by_id(id=5)
+    #     print(o.details)
 
 
 

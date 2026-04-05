@@ -4,9 +4,11 @@ import cloudinary.uploader
 from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from app import app, db
-from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail, OrderStatus
+from app import create_app, db
 
+app = create_app()
+
+from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail, OrderStatus
 
 def load_coupon():
     query = Coupon.query
@@ -126,6 +128,9 @@ def apply_coupon(code, coupon_slot):
 
     return coupon
 
+
+def load_order_by_id(id):
+    return Order.query.filter(Order.id==id).first()
 
 
 def add_order(cart, cart_stats, coupon=None):

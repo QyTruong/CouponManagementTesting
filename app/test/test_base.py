@@ -1,18 +1,14 @@
 import pytest
 from flask import Flask
-from app import db, dao
+from app import db, dao, create_app
 from app.models import Product, Category
 
-def create_app():
-    app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    db.init_app(app)
-
-    return app
 
 @pytest.fixture
 def test_app():
-    app = create_app()
+    app = create_app({
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"
+    })
     with app.app_context():
         db.create_all()
         yield app
@@ -37,8 +33,7 @@ def sample_categories(test_session):
     return [c1, c2, c3, c4]
 
 @pytest.fixture
-def sample_products(test_session, sample_categories):
-    c1, c2, c3, c4 = sample_categories
+def sample_products(test_session):
 
     p1 = Product(name='Áo thun', price=20000, category_id=1)
     p2 = Product(name='Áo Hoodie', price=50000, category_id=1)
