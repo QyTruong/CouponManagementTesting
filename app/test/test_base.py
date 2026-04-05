@@ -1,7 +1,7 @@
 import pytest
 from flask import Flask
 from app import db, dao
-from app.models import Product
+from app.models import Product, Category
 
 def create_app():
     app = Flask(__name__)
@@ -23,8 +23,23 @@ def test_session(test_app):
     yield db.session
     db.session.rollback()
 
+@pytest.fixture()
+def sample_categories(test_session):
+
+    c1 = Category(id=1, name="Áo")
+    c2 = Category(id=2, name="Quần")
+    c3 = Category(id=3, name="Giày")
+    c4 = Category(id=4, name="Phụ kiện")
+
+    test_session.add_all([c1, c2, c3, c4])
+    test_session.commit()
+
+    return [c1, c2, c3, c4]
+
 @pytest.fixture
-def sample_products(test_session):
+def sample_products(test_session, sample_categories):
+    c1, c2, c3, c4 = sample_categories
+
     p1 = Product(name='Áo thun', price=20000, category_id=1)
     p2 = Product(name='Áo Hoodie', price=50000, category_id=1)
     p3 = Product(name='Quần dài', price=30000, category_id=2)
@@ -37,12 +52,12 @@ def sample_products(test_session):
     test_session.add_all([p1,p2,p3,p4,p5,p6,p7,p8,p9])
     test_session.commit()
 
-    return p1,p2,p3,p4,p5,p6,p7,p8,p9
+    return [p1,p2,p3,p4,p5,p6,p7,p8,p9]
 
 
-def test_kw_products(sample_products):
-    actual_product = dao.load_products(kw='Áo thun')
+def test_all(sample_products):
+    actual = dao.load_products()
 
-    assert len(actual_product) == 1
+    assert len(actual) == 6
 
 
