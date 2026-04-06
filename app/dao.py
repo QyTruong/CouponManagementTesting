@@ -151,6 +151,13 @@ def add_order(cart, cart_stats, coupon=None):
 def load_orders_by_user_id(user_id):
     return Order.query.filter_by(user_id=user_id).all()
 
+
+def pay_order(order_id):
+    o = Order.query.get(order_id=order_id).first()
+    o.status = OrderStatus.PAID
+
+
+
 def add_user(name, username, password, avatar=None):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
     u = User(name=name.strip(), username=username.strip(), password=password)
