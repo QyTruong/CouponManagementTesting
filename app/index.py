@@ -1,11 +1,13 @@
 import math
 from datetime import datetime
+
+import stripe
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
 from app import create_app, dao, utils, login
 from app.dao import add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id
+    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id, pay_order
 from app.payment import StripePayment
 
 
@@ -252,6 +254,29 @@ def create_checkout_session(order_id):
     return jsonify({'status': 303, 'url': checkout_session})
 
 
+@app.route('/webhook', methods=['POST'])
+def webhook_payment():
+    stripe_payment = StripePayment(items=None)
+
+    try:
+        event = stripe_payment.handel_webhook(request=request)
+
+        if event.type == 'checkout.session.completed':
+            s = event['data']['object']
+
+            order_id = s['metadata']['order_id']
+
+            o = load_order_by_id(id=order_id)
+
+            pay_order(order_id=order_id)
+
+            print("Thành công")
+
+    except Exception as e:
+        return jsonify({"status": 400, "error": str(e)})
+
+    return jsonify({'status': 200})
+
 @app.route('/success', methods=['GET'])
 def pay_success():
     return render_template('/payment/success_page.html')
@@ -263,7 +288,7 @@ def pay_cancel():
 if __name__ == '__main__':
     from app.admin import admin
 
-    app.run(debug=True, port=4242)
+    app.run(debug=True, port=5000)
 
     # with app.app_context():
     #     o = load_order_by_id(id=5)

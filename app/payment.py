@@ -1,6 +1,7 @@
 import os
 
 import stripe
+from requests import session
 
 
 class StripePayment:
@@ -8,8 +9,9 @@ class StripePayment:
         self.items = items if items is not None else []
         self.stripe = stripe
         self.stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
-        self.success_url = 'http://localhost:4242/success'
-        self.cancel_url = 'http://localhost:4242/cancel'
+        self.success_url = 'http://localhost:5000/success'
+        self.cancel_url = 'http://localhost:5000/cancel'
+        self.webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     def create_payment(self, metadata):
         try:
@@ -25,3 +27,19 @@ class StripePayment:
 
         return checkout_session.url
 
+    def handel_webhook(self, request):
+        payload = request.data
+        event = None
+        sig_header = request.headers.get('Stripe-Signature')
+
+        if self.webhook_secret:
+            try:
+                event = stripe.Webhook.construct_event(
+                    payload, sig_header, self.webhook_secret
+                )
+            except Exception as e:
+                raise ValueError('Chữ ký xác thực webhook bị lỗi')
+
+            return event
+
+        raise Exception("webhook error")
