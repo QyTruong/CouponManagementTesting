@@ -1,27 +1,22 @@
 import hashlib
+import re
 from datetime import datetime
 import cloudinary.uploader
 from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from app import create_app, db
+from flask import current_app
 
 app = create_app()
 
 from app.models import Coupon, UserRole, CouponType, User, Product, Category, Order, OrderDetail, OrderStatus
-
-def load_coupon():
-    query = Coupon.query
-
-    return query.all()
 
 
 # Tạo mã giảm giá
 def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
     if role is not UserRole.ADMIN:
         raise ValueError('Chỉ có admin mới có thể tạo phiếu giảm giá')
-    if Coupon.query.filter(Coupon.code==code).first():
-        raise ValueError('Mã phiếu giảm này đã tồn tại')
     if expiry_date <= datetime.now():
         raise ValueError('Thời hạn sử dụng phải sau ngày giờ hiện tại')
     if max_quantity <= 0:
@@ -32,6 +27,8 @@ def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
         raise ValueError('Phiếu giảm giá với hình thức % không được vượt quá 50%')
     if coupon_type == CouponType.FIXED and value < 1000:
         raise ValueError('Mệnh giá này không tồn tại')
+    if Coupon.query.filter(Coupon.code.__eq__(code)).first():
+        raise ValueError('Mã phiếu giảm này đã tồn tại')
 
     c = Coupon(code=code, value=value, coupon_type=coupon_type, max_quantity=max_quantity, expiry_date=expiry_date)
 
@@ -42,68 +39,6 @@ def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
     except IntegrityError as ex:
         db.session.rollback()
         raise Exception(ex)
-
-
-# Xóa mã giảm giá
-def delete_coupon(coupon, role):
-    if role is not UserRole.ADMIN:
-        raise ValueError("Chỉ có admin mới được xóa mã giảm giá")
-
-    order_in_processing = Order.query.filter(Order.coupon_id==coupon.id,
-                                             Order.status==OrderStatus.PROCESSING).first()
-
-    if order_in_processing:
-        raise ValueError("Không thể xóa mã giảm giá này, vì vẫn đang tồn tại đơn hàng đang xử lý")
-
-    coupon.active = False
-    db.session.commit()
-
-
-def load_products(kw=None, category_id=None, page=1):
-    query = Product.query
-
-    if kw:
-        query = query.filter(Product.name.contains(kw))
-
-    if category_id:
-        query = query.filter(Product.category_id == category_id)
-
-    if page:
-        start = (page - 1) * app.config['PAGE_SIZE']
-        query = query.slice(start, start + app.config['PAGE_SIZE'])
-
-    return query.all()
-
-
-def count_products():
-    return Product.query.count()
-
-
-def load_categories():
-    query = Category.query
-    return query.all()
-
-def load_coupons(kw=None):
-    query = Coupon.query.filter(Coupon.active==True)
-
-    if kw:
-        query = query.filter(Coupon.code.contains(kw))
-
-    return query.all()
-
-def count_used_coupons():
-    query = db.session.query(Order.coupon_id, func.count(Order.id))\
-            .group_by(Order.coupon_id)
-    return query.all()
-
-def count_used_coupon(id):
-    return db.session.query(Order.coupon_id, func.count(Order.id))\
-                    .filter(Order.coupon_id==id)\
-                    .group_by(Order.coupon_id).first()
-
-def get_coupon_by_code(code):
-    return Coupon.query.filter(Coupon.code==code).first()
-
 
 # Áp dụng mã giảm giá
 def apply_coupon(code, coupon_slot):
@@ -128,9 +63,71 @@ def apply_coupon(code, coupon_slot):
 
     return coupon
 
+# Xóa mã giảm giá
+def delete_coupon(coupon, role):
+    if role is not UserRole.ADMIN:
+        raise ValueError("Chỉ có admin mới được xóa mã giảm giá")
+
+    order_in_processing = Order.query.filter(Order.coupon_id.__eq__(coupon.id),
+                                             Order.status.__eq__(OrderStatus.PROCESSING)).first()
+
+    if order_in_processing:
+        raise ValueError("Không thể xóa mã giảm giá này, vì vẫn đang tồn tại đơn hàng đang xử lý")
+
+    coupon.active = False
+    db.session.commit()
+
+def load_coupons(kw=None):
+    query = Coupon.query.filter(Coupon.active==True)
+
+    if kw:
+        query = query.filter(Coupon.code.contains(kw))
+
+    return query.all()
+
+def count_used_coupons():
+    query = db.session.query(Order.coupon_id, func.count(Order.id))\
+            .group_by(Order.coupon_id)
+    return query.all()
+
+def count_used_coupon(id):
+    return db.session.query(Order.coupon_id, func.count(Order.id))\
+                    .filter(Order.coupon_id==id)\
+                    .group_by(Order.coupon_id).first()
+
+def get_coupon_by_code(code):
+    return Coupon.query.filter(Coupon.code.__eq__(code)).first()
+
+
+def load_products(kw=None, category_id=None, page=None):
+    query = Product.query
+
+    if kw:
+        query = query.filter(Product.name.contains(kw))
+
+    if category_id:
+        query = query.filter(Product.category_id.__eq__(category_id))
+
+    if page:
+        start = (page - 1) * current_app.config['PAGE_SIZE']
+        query = query.slice(start, start + current_app.config['PAGE_SIZE'])
+
+    return query.all()
+
+def load_product_by_id(id):
+    return Product.query.filter(Product.id.__eq__(id)).first()
+
+def count_products():
+    return Product.query.count()
+
+
+def load_categories():
+    query = Category.query
+    return query.all()
+
 
 def load_order_by_id(id):
-    return Order.query.filter(Order.id==id).first()
+    return Order.query.filter(Order.id.__eq__(id)).first()
 
 
 def add_order(cart, cart_stats, coupon=None):
@@ -149,7 +146,7 @@ def add_order(cart, cart_stats, coupon=None):
         db.session.commit()
 
 def load_orders_by_user_id(user_id):
-    return Order.query.filter_by(user_id=user_id).all()
+    return Order.query.filter(Order.user_id.__eq__(user_id)).all()
 
 
 def pay_order(order_id):
@@ -157,8 +154,14 @@ def pay_order(order_id):
     o.status = OrderStatus.PAID
 
 
-
 def add_user(name, username, password, avatar=None):
+    if not re.search(r'[0-9]', password.strip()):
+        raise ValueError('Mật khẩu phải có ít nhất 1 số')
+    if not re.search(r'[a-zA-Z]', password.strip()):
+        raise ValueError('Mật khẩu phải có ít nhất 1 ký tự')
+    if User.query.filter(User.username.__eq__(username)).first():
+        raise ValueError('Tên đăng nhập này đã tồn tại, vui lòng đặt tên khác')
+
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
     u = User(name=name.strip(), username=username.strip(), password=password)
 

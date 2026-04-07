@@ -1,13 +1,11 @@
 import math
-from datetime import datetime
-
-import stripe
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
 from app import create_app, dao, utils, login
 from app.dao import add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id, pay_order
+    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id, \
+    pay_order, load_product_by_id
 from app.payment import StripePayment
 
 
@@ -23,6 +21,11 @@ def index():
 
     return render_template('index.html', products=products, pages=math.ceil(count_products()/app.config['PAGE_SIZE']))
 
+@app.route('/products/<id>', methods=['GET'])
+def product_detail(id):
+    product = load_product_by_id(id=id)
+
+    return render_template('product_detail.html', product=product)
 
 @app.context_processor
 def common_responses():
