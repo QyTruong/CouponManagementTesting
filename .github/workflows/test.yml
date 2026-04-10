@@ -5,11 +5,11 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  env:
-    DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
   test:
     runs-on: ubuntu-latest
+
+    env:
+      DATABASE_URL: "sqlite:///:memory:"
 
     steps:
     - name: Checkout code
