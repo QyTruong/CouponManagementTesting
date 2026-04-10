@@ -1,5 +1,4 @@
 import os
-
 import stripe
 from requests import session
 

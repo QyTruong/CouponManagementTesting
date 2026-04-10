@@ -3,11 +3,10 @@ from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user, login_required
 from werkzeug.utils import redirect
-from app import create_app, db
-from app.dao import create_coupon, delete_coupon
+from app import app, db
+from app.dao.dao_coupon import create_coupon, delete_coupon
 from app.models import UserRole, Coupon, Product, Category, User
 
-app = create_app()
 
 class AdminView(ModelView):
     def is_accessible(self):
