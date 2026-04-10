@@ -1,17 +1,26 @@
 import pytest
 from flask import Flask
-from app import db, dao, create_app
+from app import db
+from app.dao.dao_product import load_products
 from app.models import Product, Category
 
 
-@pytest.fixture
+def create_app():
+    app = Flask(__name__)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config['PAGE_SIZE'] = 2
+    db.init_app(app)
+
+    return app
+
+
+@pytest.fixture()
 def test_app():
-    app = create_app({
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"
-    })
+    app = create_app()
+
     with app.app_context():
         db.create_all()
-        yield app
+        yield
         db.drop_all()
 
 @pytest.fixture
@@ -51,7 +60,7 @@ def sample_products(test_session):
 
 
 def test_all(sample_products):
-    actual = dao.load_products()
+    actual = load_products()
 
     assert len(actual) == 6
 

@@ -2,14 +2,13 @@ import math
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
-from app import create_app, dao, utils, login
-from app.dao import add_user, auth_user, load_products, count_products, load_categories, load_coupons, \
-    count_used_coupons, get_coupon_by_code, add_order, apply_coupon, load_orders_by_user_id, load_order_by_id, \
-    pay_order, load_product_by_id
+from app import app, dao, utils, login
+from app.dao.dao_category import load_categories
+from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, get_coupon_by_code
+from app.dao.dao_product import load_products, load_product_by_id, count_products
+from app.dao.dao_user import add_user, auth_user, get_user_by_id
+from app.dao.order_dao import load_orders_by_user_id, add_order, load_order_by_id, pay_order
 from app.payment import StripePayment
-
-
-app = create_app()
 
 @app.route('/')
 def index():
@@ -213,7 +212,7 @@ def login_process():
 
 @login.user_loader
 def load_user(id):
-    return dao.get_user_by_id(id)
+    return get_user_by_id(id)
 
 
 @app.route('/logout')
@@ -291,15 +290,11 @@ def pay_cancel():
 if __name__ == '__main__':
     from app.admin import admin
 
-    app.run(debug=True, port=5000)
+    app.run(debug=True)
 
     # with app.app_context():
     #     o = load_order_by_id(id=5)
     #     print(o.details)
-
-
-
-
 
 
     # with app.app_context():
