@@ -1,10 +1,10 @@
 function applyCoupon(){
-    const code = document.getElementById('code').value
+    const code = document.getElementById('select-coupon')
 
     fetch("/api/coupons", {
         method: "post",
         body: JSON.stringify({
-            code: code
+            code: code.value
         }),
         headers: {
             "Content-Type": "application/json"
@@ -17,18 +17,5 @@ function applyCoupon(){
         else {
             alert(data.err_msg)
         }
-    })
-}
-
-function detachCoupon(){
-    fetch("/api/coupons", {
-        method: "delete"
-    }).then(res => res.json()).then(data => {
-        if (data.status == 200){
-            alert("Đã gỡ mã giảm giá ra khỏi đơn hàng")
-            location.reload()
-        }
-        else
-            alert("Gỡ mã thất bại")
     })
 }
