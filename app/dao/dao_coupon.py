@@ -57,29 +57,30 @@ def validate_value(value, coupon_type):
     if coupon_type == CouponType.VARIABLE and value > 50:
         raise ValueError('Phiếu giảm giá với hình thức % không được vượt quá 50%')
 
+def load_coupon_by_code(code):
+    return Coupon.query.filter(Coupon.code.__eq__(code)).first()
 
 # Áp dụng mã giảm giá
-def apply_coupon(code, coupon_slot):
-    if not current_user.is_authenticated:
-        raise ValueError('Bạn phải đăng nhập để có thể sử dụng phiếu giảm giá')
+def apply_coupon(order, coupon):
+    if coupon.expiry_date > datetime.now():
+        raise ValueError('Mã này đã hết hạn sử dụng, áp dụng mã thất bại')
+    if order.coupon_id is not None:
+        raise ValueError('Đơn hàng này đã được áp dụng mã giảm giá từ trước, áp dụng mã thất bại')
 
-    if coupon_slot:
-        raise ValueError('Mỗi đơn hàng chỉ được áp dụng 1 mã duy nhất, vui lòng hãy gỡ mã đã áp dụng trước đó')
+    discount_value = 0
 
-    coupon = get_coupon_by_code(code=code)
+    if coupon.coupon_type == CouponType.FIXED:
+        discount_value = coupon.value
+    elif coupon.coupon_type == CouponType.VARIABLE:
+        discount_value = (order.total_price * (coupon.value/100))
+    order.discount = discount_value
 
-    if coupon:
-        if datetime.now() > coupon.expiry_date:
-            raise ValueError('Mã này hiện đã hết hạn, không áp dụng được')
+    final_price = order.total_price - discount_value
+    order.final_price = final_price if final_price >= 0 else 0
 
-        coupon_count = count_used_coupon(id=coupon.id)
+    order.coupon = coupon
 
-        if coupon_count[1] >= coupon.max_quantity:
-            raise ValueError('Mã giảm giá này đã hết, không thể sử dụng được')
-    else:
-        raise ValueError('Mã này không tồn tại')
-
-    return coupon
+    db.session.commit()
 
 # Xóa mã giảm giá
 def delete_coupon(coupon, role):
@@ -109,6 +110,7 @@ def load_coupons(kw=None):
 
 def count_used_coupons():
     query = db.session.query(Order.coupon_id, func.count(Order.id))\
+            .filter(Order.coupon_id.isnot(None))\
             .group_by(Order.coupon_id)
     return query.all()
 
@@ -116,6 +118,3 @@ def count_used_coupon(id):
     return db.session.query(Order.coupon_id, func.count(Order.id))\
                     .filter(Order.coupon_id==id)\
                     .group_by(Order.coupon_id).first()
-
-def get_coupon_by_code(code):
-    return Coupon.query.filter(Coupon.code.__eq__(code)).first()

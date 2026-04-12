@@ -4,10 +4,10 @@ from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import redirect
 from app import app, dao, utils, login
 from app.dao.dao_category import load_categories
-from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, get_coupon_by_code
+from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, load_coupon_by_code
 from app.dao.dao_product import load_products, load_product_by_id, count_products
 from app.dao.dao_user import add_user, auth_user, get_user_by_id
-from app.dao.order_dao import load_orders_by_user_id, add_order, load_order_by_id, pay_order
+from app.dao.dao_order import load_orders_by_user_id, add_order, load_order_by_id, pay_order
 from app.payment import StripePayment
 
 @app.route('/')
@@ -30,7 +30,8 @@ def product_detail(id):
 def common_responses():
     return {
         'categories' : load_categories(),
-        'stats_cart' : utils.stats_cart(session.get('cart'), session.get('coupon_slot'))
+        'stats_cart' : utils.stats_cart(session.get('cart'), session.get('coupon_slot')),
+        'coupons' : load_coupons(),
     }
 
 
@@ -105,41 +106,25 @@ def apply_coupon_to_cart():
     cart = session.get('cart')
     code = request.json.get('code')
 
-    try:
-        if cart:
-            try:
-                coupon_slot = session.get('coupon_slot')
-                coupon = apply_coupon(code=code, coupon_slot=coupon_slot)
+    if cart:
+        if code == 'no':
+            session.pop('coupon_slot', None)
 
-                if not coupon_slot:
-                    coupon_slot = {
-                        'code': code,
-                        'value': coupon.value,
-                        'coupon_type': coupon.coupon_type.value,
-                    }
+            return jsonify({'status': 200} | utils.stats_cart(cart))
+        else:
+            coupon = load_coupon_by_code(code=code)
 
-                session['coupon_slot'] = coupon_slot
+            coupon_slot = {
+                'code': code,
+                'value': coupon.value,
+                'coupon_type': coupon.coupon_type.value,
+            }
 
-            except Exception as e:
-                return jsonify({'status': 400, 'err_msg': str(e)})
+            session['coupon_slot'] = coupon_slot
 
             return jsonify({'status': 200} | utils.stats_cart(cart, coupon=coupon_slot))
 
-        return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại !!'})
-
-    except Exception as e:
-        return jsonify({'status': 400, 'err_msg': str(e)})
-
-
-@app.route('/api/coupons', methods=['delete'])
-def detach_coupon():
-    coupon_slot = session.get('coupon_slot')
-
-    if coupon_slot:
-        session.pop('coupon_slot', None)
-        return jsonify({'status': 200})
-
-    return jsonify({'status': 400})
+    return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại !!'})
 
 
 @app.route('/orders', methods=['get'])
@@ -154,18 +139,17 @@ def order():
     coupon_slot = session.get('coupon_slot')
 
     try:
+        order = add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart))
+
         if coupon_slot:
-            coupon = get_coupon_by_code(code=coupon_slot['code'])
-            add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart, coupon=coupon_slot), coupon=coupon)
+            coupon = load_coupon_by_code(code=coupon_slot['code'])
+            apply_coupon(order=order, coupon=coupon)
             del session['coupon_slot']
-        else:
-            add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart))
 
         del session['cart']
 
         return jsonify({'status': 200})
     except Exception as e:
-        print(e)
         return jsonify({'status': 400, 'err_msg': str(e)})
 
 
@@ -263,8 +247,9 @@ def webhook_payment():
     try:
         event = stripe_payment.handel_webhook(request=request)
 
+
         if event.type == 'checkout.session.completed':
-            s = event['data']['object']
+            s = event.data.object
 
             order_id = s['metadata']['order_id']
 
@@ -290,11 +275,13 @@ def pay_cancel():
 if __name__ == '__main__':
     from app.admin import admin
 
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
 
     # with app.app_context():
-    #     o = load_order_by_id(id=5)
-    #     print(o.details)
+    #     ors = count_used_coupons()
+    #
+    #     for i in range(0, len(ors)):
+    #         print(ors[i])
 
 
     # with app.app_context():
