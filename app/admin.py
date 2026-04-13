@@ -5,7 +5,7 @@ from flask_login import current_user, logout_user, login_required
 from werkzeug.utils import redirect
 from app import app, db
 from app.dao.dao_coupon import create_coupon, delete_coupon
-from app.models import UserRole, Coupon, Product, Category, User
+from app.models import UserRole, Coupon, Product, Category, User, CouponUser
 
 
 class AdminView(ModelView):
@@ -48,7 +48,6 @@ class CouponView(AdminView):
                 code = form.data['code'],
                 value = form.data['value'],
                 coupon_type= form.data['coupon_type'],
-                max_quantity= form.data['max_quantity'],
                 expiry_date= form.data['expiry_date'],
                 role=current_user.user_role)
 
@@ -69,6 +68,12 @@ class CouponView(AdminView):
 
         return True
 
+class CouponUserView(AdminView):
+    column_list = ['id', 'user', 'coupon', 'usage_limitation']
+    column_filters = ['user', 'coupon']
+    edit_modal = True
+
+
 class LogoutView(BaseView):
     @expose('/')
     def index(self):
@@ -88,4 +93,5 @@ admin.add_view(CouponView(Coupon, db.session))
 admin.add_view(ProductView(Product, db.session))
 admin.add_view(CategoryView(Category, db.session))
 admin.add_view(UserView(User, db.session))
+admin.add_view(CouponUserView(CouponUser, db.session))
 admin.add_view(LogoutView(name='Đăng xuất'))
