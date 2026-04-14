@@ -64,8 +64,8 @@ class Coupon(BaseModel):
 class CouponUser(BaseModel):
     __tablename__ = 'coupon_user'
 
-    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
-    coupon_id = Column(Integer, ForeignKey('coupon.id'), primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    coupon_id = Column(Integer, ForeignKey('coupon.id'))
     usage_limitation = Column(Integer, default=0)
 
 
