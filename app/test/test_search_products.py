@@ -12,7 +12,7 @@ def test_zero(sample_products):
     actual_products_kw = load_products(kw='aaaazzzz')
     assert len(actual_products_kw) == 0
 
-    actual_products_page = load_products(page=100)
+    actual_products_page = load_products(page=10)
     assert len(actual_products_page) == 0
 
     actual_products_cate = load_products(category_id=100)
@@ -104,12 +104,11 @@ def test_kw_cate_paging(sample_products, kw, cate, page, expected):
 
 
 @pytest.mark.parametrize("kw, cate, page, expected", [
-    ("", None, None, 11), ("   ", None, None, 0),
-    ("zzzz", None, None, 0), (None, 999, None, 0),
-    (None, -1, None, 0), (None, None, 0, 0), (None, 1, 0, 0),
-    (None, None, 999, 0), ("Áo", 0, 0, 0),
+    ("", None, None, 11), ("   ", None, None, 0),("zzzz", None, 1, 0),
+    (None, 1, 6, 0),("", 1, 6, 0), (None, 1, 0, 0),
+    (None, 1, 1, 2),(None, None, 7, 0), ("Áo", 0, 6, 0),
 ])
-def test_edge(sample_products, kw, cate, page, expected):
+def test_boundary(sample_products, kw, cate, page, expected):
     actual_products = load_products(kw=kw, category_id=cate, page=page)
 
     assert len(actual_products) == expected
