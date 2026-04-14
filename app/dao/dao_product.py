@@ -3,6 +3,9 @@ from app.models import Product
 
 
 def load_products(kw=None, category_id=None, page=None):
+    if page is not None and page < 1:
+        raise ValueError('Số trang phải lớn hơn 1')
+
     query = Product.query
 
     if kw:
@@ -12,9 +15,6 @@ def load_products(kw=None, category_id=None, page=None):
         query = query.filter(Product.category_id.__eq__(category_id))
 
     if page:
-        if page < 1:
-            raise Exception("Thứ tự trang phải lớn hơn 0")
-
         start = (page - 1) * current_app.config['PAGE_SIZE']
         query = query.slice(start, start + current_app.config['PAGE_SIZE'])
 
