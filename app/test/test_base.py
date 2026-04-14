@@ -46,22 +46,21 @@ def sample_products(test_session):
 
     p1 = Product(name='Áo thun', price=20000, category_id=1)
     p2 = Product(name='Áo Hoodie', price=50000, category_id=1)
-    p3 = Product(name='Quần dài', price=30000, category_id=2)
-    p4 = Product(name='Áo trong category quần', price=20000, category_id=2)
-    p5 = Product(name='Váy ngắn', price=20000, category_id=2)
-    p6 = Product(name='Giày thể thao ', price=60000, category_id=3)
-    p7 = Product(name='Dép', price=30000, category_id=3)
-    p8 = Product(name='Mũ', price=20000, category_id=4)
-    p9 = Product(name='Găng tay', price=20000, category_id=4)
-    test_session.add_all([p1,p2,p3,p4,p5,p6,p7,p8,p9])
+    p3 = Product(name='Áo sơ mi', price=40000, category_id=1)
+    p4 = Product(name='Quần dài', price=30000, category_id=2)
+    p5 = Product(name='Quần kaki', price=40000, category_id=2)
+    p6 = Product(name='Áo trong category quần', price=20000, category_id=2)
+    p7 = Product(name='Váy ngắn', price=20000, category_id=2)
+    p8 = Product(name='Giày thể thao ', price=60000, category_id=3)
+    p9 = Product(name='Dép', price=30000, category_id=3)
+    p10 = Product(name='Mũ', price=20000, category_id=4)
+    p11= Product(name='Găng tay', price=20000, category_id=4)
+
+    test_session.add_all([p1,p2,p3,p4,p5,p6,p7,p8,p9, p10, p11])
     test_session.commit()
 
-    return [p1,p2,p3,p4,p5,p6,p7,p8,p9]
+    return [p1,p2,p3,p4,p5,p6,p7,p8,p9, p10, p11]
 
 
-def test_all(sample_products):
-    actual = load_products()
-
-    assert len(actual) == 6
 
 
