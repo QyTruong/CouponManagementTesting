@@ -17,7 +17,7 @@ def index():
     page = int(request.args.get('page', 1))
     category_id = request.args.get('category_id')
 
-    products = load_products(kw=kw, category_id=category_id,page=page)
+    products = load_products(kw=kw, category_id=category_id, page=page)
 
     return render_template('index.html', products=products, pages=math.ceil(count_products()/app.config['PAGE_SIZE']))
 
