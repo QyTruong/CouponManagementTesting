@@ -23,7 +23,7 @@ class OrderStatus(Type):
 class BaseModel(db.Model):
     __abstract__ = True
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
 
 class User(BaseModel, UserMixin):
@@ -38,6 +38,7 @@ class User(BaseModel, UserMixin):
     joined_date = Column(DateTime, default=datetime.now)
 
     orders = relationship('Order', backref='user', lazy=True)
+    coupon_users = relationship('CouponUser', backref='user', lazy=True)
 
     def __str__(self):
         return self.name
@@ -49,15 +50,24 @@ class Coupon(BaseModel):
     active = Column(Boolean, default=True)
     value = Column(Float, default=0)
     coupon_type = Column(Enum(CouponType), default=CouponType.FIXED)
-    max_quantity = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     expiry_date = Column(DateTime, nullable=False)
 
     orders = relationship('Order', backref='coupon', lazy=True)
+    coupon_users = relationship('CouponUser', backref='coupon', lazy=True)
 
     def __str__(self):
         return self.code
+
+
+class CouponUser(BaseModel):
+    __tablename__ = 'coupon_user'
+
+    user_id = Column(Integer, ForeignKey('user.id'), primary_key=True)
+    coupon_id = Column(Integer, ForeignKey('coupon.id'), primary_key=True)
+    usage_limitation = Column(Integer, default=0)
+
 
 class Order(BaseModel):
     __tablename__ = 'order'

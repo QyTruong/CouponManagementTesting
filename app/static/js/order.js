@@ -8,8 +8,7 @@ function order(){
                 location.reload()
             }
             else
-                alert("Đặt hàng thất bại")
-                console.log(data.err_msg)
+                alert(data.err_msg)
         })
     }
 }

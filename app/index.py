@@ -5,6 +5,7 @@ from werkzeug.utils import redirect
 from app import app, dao, utils, login
 from app.dao.dao_category import load_categories
 from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, load_coupon_by_code
+from app.dao.dao_coupon_user import load_coupons_by_user_id
 from app.dao.dao_product import load_products, load_product_by_id, count_products
 from app.dao.dao_user import add_user, auth_user, get_user_by_id
 from app.dao.dao_order import load_orders_by_user_id, add_order, load_order_by_id, pay_order
@@ -94,12 +95,10 @@ def update_cart(id):
 
 @app.route('/coupons', methods=['get'])
 def coupon_view():
-    kw = request.args.get('kw')
-
     used = [c for c in count_used_coupons()]
-    coupons = zip(load_coupons(kw=kw), used)
+    coupons_user = zip(load_coupons_by_user_id(current_user.id), used)
 
-    return render_template('coupon.html', coupons=coupons)
+    return render_template('coupon.html', coupons_user=coupons_user)
 
 @app.route('/api/coupons', methods=['post'])
 def apply_coupon_to_cart():
@@ -150,6 +149,7 @@ def order():
 
         return jsonify({'status': 200})
     except Exception as e:
+        print(e)
         return jsonify({'status': 400, 'err_msg': str(e)})
 
 

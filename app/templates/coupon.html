@@ -1,44 +1,38 @@
 {% extends 'layout/base.html' %}
 
-{% block title %}Danh sách mã{% endblock %}
+{% block title %}Đăng nhập{% endblock %}
 
 {% block content %}
+<h1 class="text-success text-center">Danh sách mã giảm giá</h1>
 
-<h1 class="text-center text-success mt-3">DANH SÁCH MÃ GIẢM GIÁ</h1>
-
-<form class="d-flex m-4" method="get" action="/coupons">
-    <input class="form-control me-2" type="text" placeholder="Tìm tên mã.." name="kw" />
-    <button class="btn btn-danger" type="submit">Tìm</button>
-</form>
-
-{% if coupons %}
-<table class="table">
-    <tr>
-        <th>Tên mã</th>
-        <th>Giá trị</th>
-        <th>Hình thức giảm</th>
-        <th>Số lượng còn lại</th>
-        <th>Ngày phát hành</th>
-        <th>Hạn sử dụng</th>
-    </tr>
-    {% for c, u in coupons %}
-    <tr>
-        <td>{{ c.code }}</td>
-        {% if c.coupon_type.name == "FIXED" %}
-        <td>{{ "{:,.0f}".format(c.value) }}</td>
-        <td>VNĐ</td>
-        {% else %}
-        <td>{{ c.value }}</td>
-        <td>%</td>
-        {% endif %}
-        <td>{{ u[1] }}/{{ c.max_quantity }}</td>
-        <td>{{ c.created_at }}</td>
-        <td>{{ c.expiry_date }}</td>
-    </tr>
-    {% endfor %}
-</table>
-{% else %}
-<h2>Hiện tại không còn mã giảm nào có sẵn !!!</h2>
+{% if err_msg %}
+<div class="alert alert-danger">{{err_msg}}</div>
 {% endif %}
+
+<table class="table">
+  <tr>
+    <th>Tên mã</th>
+    <th>Giá trị</th>
+    <th>Số lượng còn lại</th>
+    <th>Số lần sử dụng tối đa</th>
+    <th>Hạn sử dụng</th>
+  </tr>
+  {% for c, u in coupons_user %}
+  <tr>
+    <td>{{ c.coupon.code }}</td>
+    <td>{{ "{:,.0f}".format(c.coupon.value) }}
+    {% if c.coupon.coupon_type.name == 'FIXED' %}
+      VNĐ
+    {% else %}
+      %
+    {% endif %}
+    </td>
+    <td>{{ u[1] }}</td>
+    <td>{{ c.usage_limitation }}</td>
+    <td>{{ c.coupon.expiry_date }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
 
 {% endblock %}

@@ -2,23 +2,22 @@ from sqlite3 import IntegrityError
 from flask_login import current_user
 from sqlalchemy import func
 from app import db
-from app.models import Coupon, UserRole, CouponType, Order, OrderStatus
+from app.models import Coupon, UserRole, CouponType, Order, OrderStatus, CouponUser
 from datetime import datetime, timedelta
 
 
 # Tạo mã giảm giá
-def create_coupon(code, value, coupon_type, max_quantity, expiry_date, role):
+def create_coupon(code, value, coupon_type, expiry_date, role):
     if role is not UserRole.ADMIN:
         raise ValueError('Chỉ có admin mới có thể tạo phiếu giảm giá')
 
     validate_expiration(expiry_date=expiry_date)
-    validate_quantity(max_quantity=max_quantity)
     validate_value(value=value, coupon_type=coupon_type)
 
     if Coupon.query.filter(Coupon.code.__eq__(code)).first():
         raise ValueError('Mã phiếu giảm này đã tồn tại')
 
-    c = Coupon(code=code, value=value, coupon_type=coupon_type, max_quantity=max_quantity, expiry_date=expiry_date)
+    c = Coupon(code=code, value=value, coupon_type=coupon_type, expiry_date=expiry_date)
 
     db.session.add(c)
     try:
@@ -38,11 +37,6 @@ def validate_expiration(expiry_date):
     if expiry_date < now + timedelta(days=1):
         raise ValueError('Thời hạn sử dụng phải lớn hơn ít nhất 1 ngày')
 
-def validate_quantity(max_quantity):
-    if max_quantity <= 0:
-        raise ValueError('Số lượng phiếu phải lớn hơn 0')
-    if max_quantity > 500:
-        raise ValueError('Số lượng không được vượt quá 500')
 
 def validate_value(value, coupon_type):
     if value <= 0:
@@ -60,12 +54,19 @@ def validate_value(value, coupon_type):
 def load_coupon_by_code(code):
     return Coupon.query.filter(Coupon.code.__eq__(code)).first()
 
+def validate_usage_limitation(coupon):
+    if count_used_coupon(id=coupon.id)[1] >= CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
+                                                                  CouponUser.user_id == current_user.id).count():
+        raise ValueError('Mã giảm giá đã dùng quá số lần cho phép')
+
 # Áp dụng mã giảm giá
 def apply_coupon(order, coupon):
-    if coupon.expiry_date > datetime.now():
+    if coupon.expiry_date < datetime.now():
         raise ValueError('Mã này đã hết hạn sử dụng, áp dụng mã thất bại')
     if order.coupon_id is not None:
         raise ValueError('Đơn hàng này đã được áp dụng mã giảm giá từ trước, áp dụng mã thất bại')
+
+    validate_usage_limitation(coupon=coupon)
 
     discount_value = 0
 
@@ -108,11 +109,13 @@ def load_coupons(kw=None):
 
     return query.all()
 
+
 def count_used_coupons():
     query = db.session.query(Order.coupon_id, func.count(Order.id))\
-            .filter(Order.coupon_id.isnot(None))\
+            .filter(Order.coupon_id.isnot(None), Order.user_id.__eq__(current_user.id))\
             .group_by(Order.coupon_id)
     return query.all()
+
 
 def count_used_coupon(id):
     return db.session.query(Order.coupon_id, func.count(Order.id))\

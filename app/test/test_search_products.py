@@ -103,3 +103,13 @@ def test_kw_cate_paging(sample_products, kw, cate, page, expected):
         assert p.price > 0
 
 
+@pytest.mark.parametrize("kw, cate, page, expected", [
+    ("", None, None, 11), ("   ", None, None, 0),
+    ("zzzz", None, None, 0), (None, 999, None, 0),
+    (None, -1, None, 0), (None, None, 0, 0), (None, 1, 0, 0),
+    (None, None, 999, 0), ("Áo", 0, 0, 0),
+])
+def test_edge(sample_products, kw, cate, page, expected):
+    actual_products = load_products(kw=kw, category_id=cate, page=page)
+
+    assert len(actual_products) == expected
