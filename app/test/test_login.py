@@ -31,7 +31,7 @@ def test_auth_user_not_exist(sample_users, username):
 
 def test_auth_user_inactive(sample_users):
     with pytest.raises(ValueError):
-        auth_user(username='user4', password='aaaa4444')
+        auth_user(username=sample_users[3].username, password='aaaa4444')
 
 
 

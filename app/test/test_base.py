@@ -1,10 +1,11 @@
 import hashlib
+from datetime import datetime, timedelta
 
 import pytest
 from flask import Flask
 from app import db
 from app.index import register_routes
-from app.models import Product, Category, User, UserRole
+from app.models import Product, Category, User, UserRole, Coupon, CouponType
 
 
 def create_app():
@@ -98,6 +99,63 @@ def sample_users(test_session):
 
     test_session.add_all([user1, user2, user3, user4])
     test_session.commit()
+
+    return [user1, user2, user3, user4]
+
+
+@pytest.fixture
+def sample_coupons(test_session):
+    # Những coupons hợp lệ
+    coupon1 = Coupon(
+        code="SALE10",
+        active=True,
+        value=10000,
+        coupon_type=CouponType.FIXED,
+        expiry_date=datetime.now() + timedelta(days=30)
+    )
+    coupon2 = Coupon(
+        code="SALE20",
+        active=True,
+        value=20000,
+        coupon_type=CouponType.FIXED,
+        expiry_date=datetime.now() + timedelta(days=30)
+    )
+    coupon3 = Coupon(
+        code="SALE15P",
+        active=True,
+        value=15,
+        coupon_type=CouponType.VARIABLE,
+        expiry_date=datetime.now() + timedelta(days=30)
+    )
+    coupon4 = Coupon(
+        code="SALE40P",
+        active=True,
+        value=40,
+        coupon_type=CouponType.VARIABLE,
+        expiry_date=datetime.now() + timedelta(days=30)
+    )
+
+    # Những coupon hết hạn
+    coupon5 = Coupon(
+        code="SALE10",
+        active=True,
+        value=10000,
+        coupon_type=CouponType.FIXED,
+        expiry_date=datetime.now() - timedelta(days=30)
+    )
+    coupon6 = Coupon(
+        code="SALE15P",
+        active=True,
+        value=15,
+        coupon_type=CouponType.VARIABLE,
+        expiry_date=datetime.now()
+    )
+
+    test_session.add_all([coupon1, coupon2, coupon3, coupon4])
+    test_session.commit()
+
+    return [coupon1, coupon2, coupon3, coupon4]
+
 
 
 

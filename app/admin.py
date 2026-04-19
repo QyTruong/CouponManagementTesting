@@ -1,7 +1,7 @@
 from flask import flash
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
-from flask_login import current_user, logout_user, login_required
+from flask_login import current_user, logout_user
 from werkzeug.utils import redirect
 from app import app, db
 from app.dao.dao_coupon import create_coupon, delete_coupon
@@ -11,6 +11,9 @@ from app.models import UserRole, Coupon, Product, Category, User, CouponUser
 class AdminView(ModelView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.user_role == UserRole.ADMIN
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect('/login')
 
 class UserView(AdminView):
     column_list = ['id', 'name', 'username', 'user_role', 'active', 'joined_date']
@@ -48,8 +51,8 @@ class CouponView(AdminView):
                 code = form.data['code'],
                 value = form.data['value'],
                 coupon_type= form.data['coupon_type'],
-                expiry_date= form.data['expiry_date'],
-                role=current_user.user_role)
+                expiry_date= form.data['expiry_date']
+            )
 
             return coupon
 
@@ -60,7 +63,7 @@ class CouponView(AdminView):
 
     def delete_model(self, model):
         try:
-            delete_coupon(coupon=model, role=current_user.user_role)
+            delete_coupon(coupon=model)
 
         except Exception as ex:
             flash(str(ex), "error")
