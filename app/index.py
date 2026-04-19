@@ -98,7 +98,7 @@ def register_routes(app):
         return jsonify(utils.stats_cart(cart=cart, coupon=session.get('coupon_slot')))
 
     @app.route('/coupons', methods=['get'])
-    @login_permission()
+    @login_permission(err_msg='Đăng nhập để có thể xem được các mã giảm giá đang sở hữu')
     def coupon_view():
         used = [c for c in count_used_coupons()]
         coupons_user = zip(load_coupons_by_user_id(current_user.id), used)
@@ -106,7 +106,7 @@ def register_routes(app):
         return render_template('coupon.html', coupons_user=coupons_user)
 
     @app.route('/api/coupons', methods=['post'])
-    @login_permission()
+    @login_permission(err_msg='Đăng nhập để có thể sử dụng mã giảm giá')
     def apply_coupon_to_cart():
         cart = session.get('cart')
         code = request.json.get('code')
@@ -133,14 +133,14 @@ def register_routes(app):
 
 
     @app.route('/orders', methods=['get'])
-    @login_permission()
+    @login_permission(err_msg='Đăng nhập để có thể xem được các đơn hàng đã đặt')
     def orders_view():
         orders = load_orders_by_user_id(current_user.id)
 
         return render_template('order_list.html', orders=orders)
 
     @app.route('/api/order', methods=['post'])
-    @login_permission()
+    @login_permission(err_msg='Đăng nhập để có thể đặt hàng')
     def order():
         cart = session.get('cart')
         coupon_slot = session.get('coupon_slot')
@@ -217,7 +217,7 @@ def register_routes(app):
 
 
     @app.route('/payment/<order_id>', methods=['POST'])
-    @login_permission()
+    @login_permission(err_msg='Đăng nhập để có thể thanh toán')
     def create_checkout_session(order_id):
         try:
             order = load_order_by_id(id=order_id)
