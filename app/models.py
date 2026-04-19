@@ -142,7 +142,13 @@ if __name__ == '__main__':
         admin_password = '123456'
         admin_password = str(hashlib.md5(admin_password.strip().encode('utf-8')).hexdigest())
         admin = User(name='admin', username='admin', password=admin_password, user_role=UserRole.ADMIN)
+
+        user1_password = 'aaaa1111'
+        user1_password = str(hashlib.md5(user1_password.strip().encode('utf-8')).hexdigest())
+        user1 = User(name='user1', username='user1', password=user1_password)
         db.session.add(admin)
+
+        db.session.add(user1)
         db.session.commit()
 
         with open('data/order.json', 'r', encoding='utf-8') as f:

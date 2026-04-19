@@ -12,9 +12,6 @@
           <li class="nav-item">
             <a class="nav-link" href="/">Trang chủ</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/coupons">Mã giảm giá</a>
-          </li>
           {% for c in categories %}
           <li class="nav-item">
             <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>
@@ -24,6 +21,9 @@
           {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a class="nav-link" href="/orders">Đơn hàng</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/coupons">Mã giảm giá</a>
             </li>
             <li class="nav-item">
               <img src="{{ current_user.avatar }}" class="rounded-circle" width="40" />

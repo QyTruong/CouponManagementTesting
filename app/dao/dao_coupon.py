@@ -7,9 +7,7 @@ from datetime import datetime, timedelta
 
 
 # Tạo mã giảm giá
-def create_coupon(code, value, coupon_type, expiry_date, role):
-    if role is not UserRole.ADMIN:
-        raise ValueError('Chỉ có admin mới có thể tạo phiếu giảm giá')
+def create_coupon(code, value, coupon_type, expiry_date):
 
     validate_expiration(expiry_date=expiry_date)
     validate_value(value=value, coupon_type=coupon_type)
@@ -84,10 +82,7 @@ def apply_coupon(order, coupon):
     db.session.commit()
 
 # Xóa mã giảm giá
-def delete_coupon(coupon, role):
-    if role is not UserRole.ADMIN:
-        raise ValueError("Chỉ có admin mới được xóa mã giảm giá")
-
+def delete_coupon(coupon):
     validate_order_in_processing(coupon=coupon)
 
     coupon.active = False
