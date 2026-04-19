@@ -1,4 +1,4 @@
-from flask import flash
+from flask import flash, jsonify
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
@@ -13,7 +13,16 @@ class AdminView(ModelView):
         return current_user.is_authenticated and current_user.user_role == UserRole.ADMIN
 
     def inaccessible_callback(self, name, **kwargs):
-        return redirect('/login')
+        if not current_user.is_authenticated:
+            return jsonify({
+                'status': 401,
+                'err_msg': 'Đăng nhập để có thể truy cập vào trang này'
+            })
+
+        return jsonify({
+            'status': 403,
+            'err_msg': 'Không có quyền truy cập trang hay chức năng này'
+        })
 
 class UserView(AdminView):
     column_list = ['id', 'name', 'username', 'user_role', 'active', 'joined_date']
@@ -60,7 +69,11 @@ class CouponView(AdminView):
             flash(str(e), "error")
             return False
 
-
+    # http://127.0.0.1:5000/admin/coupon/action/
+    # data = {
+    #     "action": "delete",
+    #     "rowid": ["1", "2"]
+    # }
     def delete_model(self, model):
         try:
             delete_coupon(coupon=model)
