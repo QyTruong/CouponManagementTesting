@@ -37,7 +37,16 @@ def get_user_by_id(id):
 
 def auth_user(username, password):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
-    return User.query.filter(User.username==username, User.password==password).first()
+
+    user = User.query.filter(User.username==username, User.password==password).first()
+
+    if not user:
+        return None
+
+    if not user.active:
+        raise ValueError("Tài khoản này bị khóa, không đăng nhập được")
+
+    return user
 
 
 def validate_name(name):
