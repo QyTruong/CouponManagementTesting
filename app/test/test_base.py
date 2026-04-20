@@ -96,6 +96,11 @@ def sample_users(test_session):
                 password=str(hashlib.md5("aaaa4444".strip().encode('utf-8')).hexdigest()),
                 active=False,
                 user_role=UserRole.USER)
+    user5 = User(name="user5",
+                 username="user5",
+                 password=str(hashlib.md5("aaaa4444".strip().encode('utf-8')).hexdigest()),
+                 active=False,
+                 user_role=UserRole.USER)
 
     test_session.add_all([user1, user2, user3, user4])
     test_session.commit()
