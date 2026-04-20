@@ -36,9 +36,12 @@ def get_user_by_id(id):
 
 
 def auth_user(username, password):
+    if password is None:
+        password = ''
+
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
 
-    user = User.query.filter(User.username==username, User.password==password).first()
+    user = User.query.filter(User.username.__eq__(username), User.password.__eq__(password)).first()
 
     if not user:
         return None
