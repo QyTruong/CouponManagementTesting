@@ -4,7 +4,9 @@ function order(){
             method: "post"
         }).then(res => res.json()).then(data => {
             if (data.status == 200){
-                alert("Đặt hàng thành công")
+                coupon_err_msg = ""
+                if (data.coupon_err_msg) coupon_err_msg = data.coupon_err_msg
+                alert("[Thành công] Đặt hàng thành công" + "\n\n[Lỗi] Mã không áp dụng được vì: " + coupon_err_msg)
                 location.reload()
             }
             else
@@ -18,11 +20,9 @@ function pay(order_id){
         method: "post",
     }).then(res => res.json()).then(data => {
         if (data.status === 303){
-            console.log("hello")
             window.location.href = data.url
         }
         else {
-            console.log('bruh')
             console.log(data.error)
         }
     })

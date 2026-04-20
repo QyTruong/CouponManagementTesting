@@ -53,9 +53,27 @@ def load_coupon_by_code(code):
     return Coupon.query.filter(Coupon.code.__eq__(code)).first()
 
 def validate_usage_limitation(coupon):
-    if count_used_coupon(id=coupon.id)[1] >= CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
-                                                                  CouponUser.user_id == current_user.id).count():
+    coupon_user = CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
+                                        CouponUser.user_id == current_user.id).first()
+
+    if coupon_user is None:
+        raise ValueError('Bạn chưa được cấp quyền sử dụng mã giảm giá này')
+
+    if count_used_coupon(id=coupon.id)[1] >= coupon_user.usage_limitation:
         raise ValueError('Mã giảm giá đã dùng quá số lần cho phép')
+
+def calculate_discount_value(order, coupon):
+    discount_value = 0
+
+    if coupon.coupon_type == CouponType.FIXED:
+        discount_value = coupon.value
+    elif coupon.coupon_type == CouponType.VARIABLE:
+        discount_value = (order.total_price * (coupon.value / 100))
+    order.discount = discount_value
+
+    final_price = order.total_price - discount_value
+
+    return final_price if final_price >= 0 else 0
 
 # Áp dụng mã giảm giá
 def apply_coupon(order, coupon):
@@ -66,16 +84,7 @@ def apply_coupon(order, coupon):
 
     validate_usage_limitation(coupon=coupon)
 
-    discount_value = 0
-
-    if coupon.coupon_type == CouponType.FIXED:
-        discount_value = coupon.value
-    elif coupon.coupon_type == CouponType.VARIABLE:
-        discount_value = (order.total_price * (coupon.value/100))
-    order.discount = discount_value
-
-    final_price = order.total_price - discount_value
-    order.final_price = final_price if final_price >= 0 else 0
+    order.final_price = calculate_discount_value(order=order, coupon=coupon)
 
     order.coupon = coupon
 
@@ -105,9 +114,9 @@ def load_coupons(kw=None):
     return query.all()
 
 
-def count_used_coupons():
+def count_used_coupons(user_id):
     query = db.session.query(Order.coupon_id, func.count(Order.id))\
-            .filter(Order.coupon_id.isnot(None), Order.user_id.__eq__(current_user.id))\
+            .filter(Order.coupon_id.isnot(None), Order.user_id.__eq__(user_id))\
             .group_by(Order.coupon_id)
     return query.all()
 
