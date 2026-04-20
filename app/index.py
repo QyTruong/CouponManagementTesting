@@ -36,14 +36,14 @@ def register_routes(app):
         return {
             'categories' : load_categories(),
             'stats_cart' : utils.stats_cart(session.get('cart'), session.get('coupon_slot')),
-            'coupons' : load_coupons(),
         }
 
 
     @app.route('/cart')
     def cart_view():
+        coupons = load_coupons_by_user_id(user_id=current_user.id) if current_user.is_authenticated else None
 
-        return render_template('cart.html')
+        return render_template('cart.html', coupons=coupons)
 
     @app.route('/api/cart', methods=['post'])
     def add_to_cart():
@@ -100,8 +100,13 @@ def register_routes(app):
     @app.route('/coupons', methods=['get'])
     @login_permission(err_msg='Đăng nhập để có thể xem được các mã giảm giá đang sở hữu')
     def coupon_view():
-        used = [c for c in count_used_coupons()]
-        coupons_user = zip(load_coupons_by_user_id(current_user.id), used)
+        coupons = load_coupons_by_user_id(user_id=current_user.id)
+        used_dict = dict(count_used_coupons(user_id=current_user.id))
+
+        coupons_user = []
+        for c in coupons:
+            used_count = used_dict.get(c.coupon.id, 0)
+            coupons_user.append((c, (None, used_count)))
 
         return render_template('coupon.html', coupons_user=coupons_user)
 
@@ -144,18 +149,23 @@ def register_routes(app):
     def order():
         cart = session.get('cart')
         coupon_slot = session.get('coupon_slot')
+        coupon_err_msg = None
 
         try:
             order = add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart))
 
             if coupon_slot:
                 coupon = load_coupon_by_code(code=coupon_slot['code'])
-                apply_coupon(order=order, coupon=coupon)
+                try:
+                    apply_coupon(order=order, coupon=coupon)
+                except Exception as e:
+                    coupon_err_msg = str(e)
+
                 del session['coupon_slot']
 
             del session['cart']
 
-            return jsonify({'status': 200})
+            return jsonify({'status': 200, 'coupon_err_msg': coupon_err_msg})
         except Exception as e:
             print(e)
             return jsonify({'status': 400, 'err_msg': str(e)})

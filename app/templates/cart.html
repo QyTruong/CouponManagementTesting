@@ -30,19 +30,23 @@
     <div class="col-md-6 col-xs-12 alert alert-info">
 
         <h3>Chọn mã giảm giá</h3>
+        {% if current_user.is_authenticated %}
         <select class="form-select" id="select-coupon" onchange="applyCoupon()">
             <option value="no">Không chọn</option>
             {% for c in coupons %}
-            <option value="{{ c.code }}"
-                    {% if c.code|string == session.get('coupon_slot', {}).get('code')|string %}
+            <option value="{{ c.coupon.code }}"
+                    {% if c.coupon.code|string == session.get('coupon_slot', {}).get('code')|string %}
                         selected
-                    {% endif %}>{{ c.code }} - Giá trị giảm: {{ "{:,.0f}".format(c.value) }}
-                    {% if c.coupon_type.name|string == 'VARIABLE' %}
+                    {% endif %}>{{ c.coupon.code }} - Giá trị giảm: {{ "{:,.0f}".format(c.coupon.value) }}
+                    {% if c.coupon.coupon_type.name|string == 'VARIABLE' %}
                         %
                     {% endif %}
             </option>
             {% endfor %}
         </select>
+        {% else %}
+        <a href="/login">Đăng nhập để có thể sử dụng mã giảm giá</a>
+        {% endif %}
     </div>
     <div class="col-md-6 col-xs-12 alert alert-success">
         <h2>Số lượng sản phẩm: <span class="cart-counter">{{ stats_cart.total_quantity }}</span></h2>
