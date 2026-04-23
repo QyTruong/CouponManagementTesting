@@ -46,6 +46,9 @@ def validate_value(value, coupon_type):
     if coupon_type == CouponType.FIXED and value < 1000:
         raise ValueError('Mệnh giá này không tồn tại')
 
+    if coupon_type == CouponType.VARIABLE and value < 1:
+        raise ValueError('Phiếu giảm giá với hình thức % không được nhỏ hơn 1%')
+
     if coupon_type == CouponType.VARIABLE and value > 50:
         raise ValueError('Phiếu giảm giá với hình thức % không được vượt quá 50%')
 
@@ -56,11 +59,26 @@ def validate_usage_limitation(coupon):
     coupon_user = CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
                                         CouponUser.user_id == current_user.id).first()
 
+    _, used_count = count_used_coupon(coupon_id=coupon.id)
+
     if coupon_user is None:
         raise ValueError('Bạn chưa được cấp quyền sử dụng mã giảm giá này')
 
-    if count_used_coupon(id=coupon.id)[1] >= coupon_user.usage_limitation:
+    if used_count >= coupon_user.usage_limitation:
         raise ValueError('Mã giảm giá đã dùng quá số lần cho phép')
+
+
+def count_used_coupon(coupon_id):
+    result = (db.session.query(
+        Order.coupon_id,
+        func.count(Order.id)
+    ).filter(Order.coupon_id.__eq__(coupon_id))
+    .group_by(Order.coupon_id).first())
+
+    if result is None:
+        return (coupon_id, 0)
+
+    return result
 
 def calculate_discount_value(order, coupon):
     discount_value = 0
@@ -120,8 +138,3 @@ def count_used_coupons(user_id):
             .group_by(Order.coupon_id)
     return query.all()
 
-
-def count_used_coupon(id):
-    return db.session.query(Order.coupon_id, func.count(Order.id))\
-                    .filter(Order.coupon_id==id)\
-                    .group_by(Order.coupon_id).first()

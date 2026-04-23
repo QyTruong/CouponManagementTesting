@@ -5,7 +5,7 @@ import pytest
 from flask import Flask
 from app import db
 from app.index import register_routes
-from app.models import Product, Category, User, UserRole, Coupon, CouponType
+from app.models import Product, Category, User, UserRole, Coupon, CouponType, Order, CouponUser
 
 
 def create_app():
@@ -98,14 +98,14 @@ def sample_users(test_session):
                 user_role=UserRole.USER)
     user5 = User(name="user5",
                  username="user5",
-                 password=str(hashlib.md5("aaaa4444".strip().encode('utf-8')).hexdigest()),
+                 password=str(hashlib.md5("aaaa5555".strip().encode('utf-8')).hexdigest()),
                  active=False,
                  user_role=UserRole.USER)
 
-    test_session.add_all([user1, user2, user3, user4])
+    test_session.add_all([user1, user2, user3, user4, user5])
     test_session.commit()
 
-    return [user1, user2, user3, user4]
+    return [user1, user2, user3, user4, user5]
 
 
 @pytest.fixture
@@ -161,6 +161,41 @@ def sample_coupons(test_session):
 
     return [coupon1, coupon2, coupon3, coupon4]
 
+
+@pytest.fixture
+def sample_orders(test_session):
+    order1 = Order(user_id=1, coupon_id=1, total_price=100000, discount=10000, final_price=90000)
+    order2 = Order(user_id=1, coupon_id=1, total_price=200000, discount=10000, final_price=190000)
+    order3 = Order(user_id=1, coupon_id=2, total_price=300000, discount=10000, final_price=290000)
+
+    test_session.add_all([order1, order2, order3])
+    test_session.commit()
+
+    return [order1, order2, order3]
+
+
+@pytest.fixture
+def sample_coupon_users(test_session):
+    coupon_user1 = CouponUser(
+        user_id=1,
+        coupon_id=1,
+        usage_limitation=5
+    )
+    coupon_user2 = CouponUser(
+        user_id=1,
+        coupon_id=2,
+        usage_limitation=10
+    )
+    coupon_user3 = CouponUser(
+        user_id=1,
+        coupon_id=3,
+        usage_limitation=0
+    )
+
+    test_session.add_all([coupon_user1, coupon_user2, coupon_user3])
+    test_session.commit()
+
+    return [coupon_user1, coupon_user2, coupon_user3]
 
 
 
