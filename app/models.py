@@ -151,10 +151,10 @@ if __name__ == '__main__':
         db.session.add(user1)
         db.session.commit()
 
-        with open('data/order.json', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            for order in data:
-                o = Order(**order)
-                db.session.add(o)
-            db.session.commit()
+        # with open('data/order.json', 'r', encoding='utf-8') as f:
+        #     data = json.load(f)
+        #     for order in data:
+        #         o = Order(**order)
+        #         db.session.add(o)
+        #     db.session.commit()
 

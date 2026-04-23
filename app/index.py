@@ -212,6 +212,7 @@ def register_routes(app):
             return render_template('login.html', err_msg=str(e))
 
         next = request.args.get('next')
+        print(next)
         return redirect(next if next else '/')
 
 

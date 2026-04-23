@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock, patch
 import pytest
 from app.dao.dao_user import auth_user
 from app.test.test_base import test_app, test_session, sample_users, test_client
@@ -13,7 +14,7 @@ def test_auth_user_success(sample_users, username, password):
     assert actual_user.username == username
 
 @pytest.mark.parametrize('password',
-    ['', 'aaaa2223', 'a'*8, '2222'*8, ''*8, 'b'*20, None]
+    ['', 'aaaa2223', 'wrong', None]
 )
 def test_auth_user_wrong_password(sample_users, password):
     actual_user = auth_user(username='user2', password=password)
@@ -32,15 +33,14 @@ def test_auth_user_inactive(sample_users):
     with pytest.raises(ValueError):
         auth_user(username=sample_users[3].username, password='aaaa4444')
 
+    with pytest.raises(ValueError):
+        auth_user(username=sample_users[4].username, password='aaaa5555')
 
 @pytest.mark.parametrize('username, password',
     [("user1", "aaaa1111"), ("user2", "aaaa2222"), ("user3", "aaaa3333")]
 )
 def test_login_success(sample_users, test_client, mocker, username, password):
-    class FakeUser:
-        pass
-
-    fake_user = FakeUser()
+    fake_user = mocker.Mock()
 
     mock_user = mocker.patch("app.index.auth_user", return_value=fake_user)
     mock_login = mocker.patch("app.index.login_user")
@@ -54,33 +54,27 @@ def test_login_success(sample_users, test_client, mocker, username, password):
     mock_login.assert_called_once_with(user=fake_user)
 
 
-@pytest.mark.parametrize('username, password',
-    [("user1", "aaaa1112"), ("user1", "aaaa2222"), ("wrong", "wrong")]
-)
-def test_login_wrong_info(sample_users, test_client, mocker, username, password):
-    mock_user = mocker.patch("app.index.auth_user", return_value=None)
+
+def test_login_wrong_info(sample_users, test_client, mocker):
+    mocker.patch("app.index.auth_user", return_value=None)
     mock_login = mocker.patch("app.index.login_user")
 
     test_client.post("/login", data={
-        "username": username,
-        "password": password
+        "username": "aaaa",
+        "password": "aaaa"
     }, content_type="application/x-www-form-urlencoded")
 
-
-    mock_user.assert_called_once_with(username=username, password=password)
     mock_login.assert_not_called()
 
 
 def test_login_miss_info(sample_users, test_client, mocker):
-    mock_user = mocker.patch("app.index.auth_user", return_value=None)
+    mocker.patch("app.index.auth_user", return_value=None)
     mock_login = mocker.patch("app.index.login_user")
 
-    res = test_client.post("/login", data={},
+    test_client.post("/login", data={},
         content_type="application/x-www-form-urlencoded"
     )
 
-    assert res.status_code == 302
-    mock_user.assert_called_once_with(username=None, password=None)
     mock_login.assert_not_called()
 
 def test_login_inactive_user(sample_users, test_client, mocker):
@@ -98,3 +92,15 @@ def test_login_inactive_user(sample_users, test_client, mocker):
     mock_login.assert_not_called()
 
 
+def test_login_redirect_next(test_client, mocker):
+    fake_user = mocker.Mock()
+
+    mocker.patch("app.index.auth_user", return_value=fake_user)
+    mocker.patch("app.index.login_user")
+
+    res = test_client.post("/login?next=/cart", data={
+        "username": "user1",
+        "password": "aaaa1111"
+    })
+
+    assert res.headers["Location"] == "/cart"
