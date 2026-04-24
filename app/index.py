@@ -134,7 +134,7 @@ def register_routes(app):
 
                 return jsonify({'status': 200} | utils.stats_cart(cart, coupon=coupon_slot))
 
-        return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại !!'})
+        return jsonify({'status': 404, 'err_msg': 'Giỏ hàng không tồn tại'})
 
 
     @app.route('/orders', methods=['get'])

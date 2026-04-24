@@ -70,7 +70,7 @@ def test_validate_usage_limitation_success(mocker, test_app):
 @pytest.mark.parametrize('coupon_id, expected',
     [(1, 2), (2, 1), (3, 0)]
 )
-def test_count_used_coupon(sample_orders, mocker, test_app, coupon_id, expected):
+def test_count_used_coupon(sample_orders, test_app, coupon_id, expected):
     coupon_id = coupon_id
 
     c_id, used = count_used_coupon(coupon_id=coupon_id)
@@ -126,4 +126,163 @@ def test_apply_coupon_order_existed_coupon(mocker):
 
     with pytest.raises(ValueError) as e:
         apply_coupon(order, coupon)
+
+
+def test_api_apply_coupon_no_cart(test_client, mocker):
+    class FakeUser:
+        is_authenticated = True
+
+    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
+    mocker.patch('app.index.current_user', new=FakeUser())
+
+    res = test_client.post("api/coupons", json={
+        "code": "SALE10"
+    })
+
+    data = res.get_json()
+
+    assert data['status'] == 404
+    assert data['err_msg'] == 'Giỏ hàng không tồn tại'
+
+
+def test_api_apply_coupon_detach_from_cart(test_client, mocker):
+    class FakeUser:
+        is_authenticated = True
+
+    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
+    mocker.patch('app.index.current_user', new=FakeUser())
+
+    with test_client.session_transaction() as sess:
+        sess['cart'] = {
+            '1': {
+                'id': 1,
+                'name': 'aaaa',
+                'price': 100000,
+                'quantity': 1,
+            }
+        }
+        sess['coupon_slot'] = {
+            'code': 'SALE10',
+            'value': 10000,
+            'coupon_type': 'tiền mặt'
+        }
+
+    res = test_client.post("/api/coupons", json={
+        "code": "no"
+    })
+
+    data = res.get_json()
+
+    assert data['status'] == 200
+    assert data['total_quantity'] == 1
+    assert data['discount_value'] == 0
+    assert data['total_price'] == 100000
+    assert data['final_price'] == 100000
+
+    with test_client.session_transaction() as sess:
+        assert 'coupon_slot' not in sess
+
+
+def test_api_apply_coupon_to_cart_success(mocker, test_client):
+    class FakeUser:
+        is_authenticated = True
+
+    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
+    mocker.patch('app.index.current_user', new=FakeUser())
+
+    mock_coupon = mocker.Mock(
+        code='SALE20',
+        value=20000,
+        coupon_type=CouponType.FIXED
+    )
+
+    mocker.patch('app.index.load_coupon_by_code', return_value=mock_coupon)
+
+    with test_client.session_transaction() as sess:
+        sess["cart"] = {
+            "1": {
+                "id": 1,
+                "name": "aaaa",
+                "price": 500000,
+                "quantity": 3,
+            }
+        }
+
+    res = test_client.post("/api/coupons", json={
+        "code": "SALE20"
+    })
+
+    data = res.get_json()
+
+    assert data['status'] == 200
+    assert data['total_quantity'] == 3
+    assert data['total_price'] == 1500000
+    assert data['discount_value'] == 20000
+    assert data['final_price'] == 1480000
+
+    with test_client.session_transaction() as sess:
+        sess['coupon_slot']['code'] = 'SALE20'
+
+def test_api_apply_coupon_not_logged_in(test_client, mocker):
+    class FakeUser:
+        is_authenticated = False
+
+    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
+
+    res = test_client.post("/api/coupons", json={
+        "code": "SALE20"
+    })
+
+    data = res.get_json()
+
+    assert data['status'] == 401
+    assert data['err_msg'] == 'Đăng nhập để có thể sử dụng mã giảm giá'
+
+
+def test_api_apply_coupon_override_existing(test_client, mocker):
+    class FakeUser:
+        is_authenticated = True
+
+    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
+    mocker.patch('app.index.current_user', new=FakeUser())
+
+    mock_coupon = mocker.Mock(
+        value=15,
+        coupon_type=CouponType.VARIABLE
+    )
+
+    mock_load = mocker.patch('app.index.load_coupon_by_code', return_value=mock_coupon)
+
+    with test_client.session_transaction() as sess:
+        sess['cart'] = {
+            "1": {
+                "id": 1,
+                "name": "aaaa",
+                "price": 100000,
+                "quantity": 5,
+            }
+        }
+        sess['coupon_slot'] = {
+            "code": "SALE10",
+            "value": 10000,
+            "coupon_type": CouponType.FIXED.name
+        }
+
+    res = test_client.post("/api/coupons", json={
+        "code": "SALE15P"
+    })
+
+    data = res.get_json()
+
+    assert data['status'] == 200
+    assert data['total_quantity'] == 5
+    assert data['total_price'] == 500000
+    assert data['discount_value'] == 75000
+    assert data['final_price'] == 425000
+
+    with test_client.session_transaction() as sess:
+        assert sess['coupon_slot']['code'] == 'SALE15P'
+        assert sess['coupon_slot']['value'] == 15
+
+    mock_load.assert_called_once_with(code="SALE15P")
 
