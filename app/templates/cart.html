@@ -50,9 +50,9 @@
     </div>
     <div class="col-md-6 col-xs-12 alert alert-success">
         <h2>Số lượng sản phẩm: <span class="cart-counter">{{ stats_cart.total_quantity }}</span></h2>
-        <h2>Tổng tiền gốc: <span class="base-price">{{ "{:,.0f}".format(stats_cart.base_price) }} VNĐ</span></h2>
+        <h2>Tổng tiền gốc: <span class="total-price">{{ "{:,.0f}".format(stats_cart.total_price) }} VNĐ</span></h2>
         <h2>Giá trị được giảm: <span class="discount-value">{{ "{:,.0f}".format(stats_cart.discount_value) }} VNĐ</span></h2>
-        <h2>Tổng tiền: <span class="total-price">{{ "{:,.0f}".format(stats_cart.total_price) }} VNĐ</span></h2>
+        <h2>Tổng tiền: <span class="final-price">{{ "{:,.0f}".format(stats_cart.final_price) }} VNĐ</span></h2>
     </div>
 </div>
 
