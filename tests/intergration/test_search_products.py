@@ -120,3 +120,4 @@ def test_boundary(sample_products, kw, cate, page, expected):
 def test_invalid_page(kw, cate, page):
     with pytest.raises(ValueError):
         load_products(kw=kw, category_id=cate, page=page)
+
