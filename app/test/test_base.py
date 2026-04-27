@@ -156,10 +156,10 @@ def sample_coupons(test_session):
         expiry_date=datetime.now()
     )
 
-    test_session.add_all([coupon1, coupon2, coupon3, coupon4])
+    test_session.add_all([coupon1, coupon2, coupon3, coupon4, coupon5, coupon6])
     test_session.commit()
 
-    return [coupon1, coupon2, coupon3, coupon4]
+    return [coupon1, coupon2, coupon3, coupon4, coupon5, coupon6]
 
 
 @pytest.fixture
