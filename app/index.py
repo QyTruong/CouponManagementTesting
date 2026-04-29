@@ -91,6 +91,10 @@ def register_routes(app):
 
         if cart and id in cart:
             quantity = int(request.json.get('quantity'))
+
+            if quantity <= 0:
+                return jsonify({"status": 400} | utils.stats_cart(cart=cart))
+
             cart[id]['quantity'] = quantity
 
         session['cart'] = cart

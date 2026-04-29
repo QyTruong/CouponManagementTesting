@@ -265,7 +265,7 @@ def test_api_apply_coupon_override_existing(test_client, mocker):
         sess['coupon_slot'] = {
             "code": "SALE10",
             "value": 10000,
-            "coupon_type": CouponType.FIXED.name
+            "coupon_type": CouponType.FIXED.value
         }
 
     res = test_client.post("/api/coupons", json={
