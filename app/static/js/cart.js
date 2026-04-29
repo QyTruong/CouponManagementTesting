@@ -57,6 +57,11 @@ function deleteFromCart(id){
 }
 
 function updateCart(id, object){
+    if (object.value <= 0){
+        alert("Số lượng sản phẩm phải lớn hơn 0")
+        location.reload()
+    }
+
     fetch(`/api/cart/${id}`, {
         method: "put",
         body: JSON.stringify({
@@ -66,6 +71,12 @@ function updateCart(id, object){
             "Content-Type": "application/json"
         }
     }).then(res => res.json()).then(data => {
+        if (data.status == 400){
+            alert("Số lượng sản phẩm phải lớn hơn 0")
+            location.reload()
+        }
+
+
         elems = document.getElementsByClassName('cart-counter')
         for (let e of elems)
             e.innerText = data.total_quantity
