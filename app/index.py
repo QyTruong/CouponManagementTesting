@@ -1,4 +1,6 @@
 import math
+
+import stripe
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user
 from werkzeug.utils import redirect
@@ -234,61 +236,62 @@ def register_routes(app):
     @app.route('/payment/<order_id>', methods=['POST'])
     @login_permission(err_msg='Đăng nhập để có thể thanh toán')
     def create_checkout_session(order_id):
-        try:
-            order = load_order_by_id(id=order_id)
+        order = load_order_by_id(id=order_id)
 
-            items = [{
-                "price_data": {
-                    "currency": "vnd",
-                    "product_data": {
-                        "name": f"Order #{order.id}"
-                    },
-                    "unit_amount": int(order.final_price)
+        items = [{
+            "price_data": {
+                "currency": "vnd",
+                "product_data": {
+                    "name": f"Order #{order.id}"
                 },
-                "quantity": 1
-            }]
+                "unit_amount": int(order.final_price)
+            },
+            "quantity": 1
+        }]
 
-            metadata = {
-                "order_id": order_id,
-                "user_id": order.user.id,
-            }
+        metadata = {
+            "order_id": order_id,
+            "user_id": order.user.id,
+        }
 
-            stripe_payment = StripePayment(items=items)
+        stripe_payment = StripePayment(items=items)
+        try:
             checkout_session = stripe_payment.create_payment(metadata=metadata)
+        except stripe.error.StripeError as e:
+            return jsonify({"error": str(e)}), 500
 
-        except Exception as e:
-            return jsonify({"status": 500, "error": str(e)})
-
-        return jsonify({'status': 303, 'url': checkout_session})
-
+        return jsonify({
+            'status': 303,
+            'url': checkout_session['url']
+        })
 
     @app.route('/webhook', methods=['POST'])
     def webhook_payment():
         stripe_payment = StripePayment(items=None)
 
         try:
-            event = stripe_payment.handel_webhook(request=request)
-
+            event = stripe_payment.handle_webhook(request=request)
 
             if event.type == 'checkout.session.completed':
-                s = event.data.object
+                sess = event.data.object
+                order_id = sess['metadata']['order_id']
 
-                order_id = s['metadata']['order_id']
-
-                o = load_order_by_id(id=order_id)
+                if not order_id:
+                    return jsonify({'status': 'Thiếu order_id trong metadata'}), 400
 
                 pay_order(order_id=order_id)
 
-                print("Thành công")
+        except stripe.error.SignatureVerificationError:
+            return jsonify({"error": "Chữ ký không hợp lệ"}), 400
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
 
-        except Exception as e:
-            return jsonify({"status": 400, "error": str(e)})
+        return jsonify({'status': 'Thành công'}), 200
 
-        return jsonify({'status': 200})
 
     @app.route('/success', methods=['GET'])
     def pay_success():
-        return render_template('/payment/success_page.html')
+        return render_template('payment/success_page.html')
 
     @app.route('/cancel', methods=['GET'])
     def pay_cancel():
@@ -303,7 +306,7 @@ if __name__ == '__main__':
     from app.admin import admin
 
     register_routes(app=app)
-    app.run(debug=True, port=5000)
+    app.run(host="127.0.0.1", port=5000, debug=True)
 
     # with app.app_context():
     #     ors = count_used_coupons()
