@@ -31,5 +31,8 @@ def load_orders_by_user_id(user_id):
 
 
 def pay_order(order_id):
-    o = Order.query.get(order_id=order_id).first()
-    o.status = OrderStatus.PAID
+    o = Order.query.filter(Order.id == order_id).first()
+
+    if o is not None and o.status == OrderStatus.PROCESSING:
+        o.status = OrderStatus.PAID
+        db.session.commit()

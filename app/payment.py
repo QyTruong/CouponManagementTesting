@@ -13,32 +13,29 @@ class StripePayment:
         self.webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     def create_payment(self, metadata):
-        try:
-            checkout_session = self.stripe.checkout.Session.create(
-                line_items= self.items,
-                mode='payment',
-                metadata=metadata,
-                success_url=self.success_url,
-                cancel_url=self.cancel_url,
-            )
-        except Exception as e:
-            return {"error": str(e)}
+        checkout_session = self.stripe.checkout.Session.create(
+            line_items= self.items,
+            mode='payment',
+            metadata=metadata,
+            success_url=self.success_url,
+            cancel_url=self.cancel_url,
+        )
 
-        return checkout_session.url
+        return {
+            "url": checkout_session.url
+        }
 
-    def handel_webhook(self, request):
-        payload = request.data
-        event = None
+    def handle_webhook(self, request):
+        payload = request.get_data()
         sig_header = request.headers.get('Stripe-Signature')
 
-        if self.webhook_secret:
-            try:
-                event = stripe.Webhook.construct_event(
-                    payload, sig_header, self.webhook_secret
-                )
-            except Exception as e:
-                raise ValueError('Chữ ký xác thực webhook bị lỗi')
+        if not self.webhook_secret:
+            raise ValueError('Chưa cài webhook secret')
 
-            return event
+        event = stripe.Webhook.construct_event(payload, sig_header, self.webhook_secret)
 
-        raise Exception("webhook error")
+        return event
+
+
+
+
