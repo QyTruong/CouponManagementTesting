@@ -137,7 +137,6 @@ def register_routes(app):
                 except ValueError as e:
                     return jsonify({'status': 400, 'err_msg': str(e)} | utils.stats_cart(cart))
 
-
                 coupon_slot = {
                     'code': code,
                     'value': coupon.value,
@@ -172,14 +171,14 @@ def register_routes(app):
                 coupon = load_coupon_by_code(code=coupon_slot['code'])
                 try:
                     apply_coupon(order=order, coupon=coupon)
-                except Exception as e:
-                    coupon_err_msg = str(e)
+                except ValueError as e:
+                    return jsonify({'status': 400, 'err_msg': str(e)})
 
                 del session['coupon_slot']
 
             del session['cart']
 
-            return jsonify({'status': 200, 'coupon_err_msg': coupon_err_msg})
+            return jsonify({'status': 200})
         except Exception as e:
             print(e)
             return jsonify({'status': 400, 'err_msg': str(e)})
