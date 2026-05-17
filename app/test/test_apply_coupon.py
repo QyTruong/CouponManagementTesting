@@ -183,18 +183,30 @@ def test_api_apply_coupon_detach_from_cart(test_client, mocker):
         assert 'coupon_slot' not in sess
 
 
-def test_api_apply_coupon_to_cart_success(mocker, test_client):
+def test_api_apply_coupon_to_cart_success(test_app, mocker, test_client):
     class FakeUser:
         is_authenticated = True
+        id = 1
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
     mocker.patch('app.index.current_user', new=FakeUser())
 
+    mock_coupon_user = mocker.Mock(
+        user_id=1,
+        coupon_id=1,
+        usage_limitation = 10
+    )
+
     mock_coupon = mocker.Mock(
+        id=1,
         code='SALE20',
         value=20000,
-        coupon_type=CouponType.FIXED
+        coupon_type=CouponType.FIXED,
+        expiry_date = datetime.now() + timedelta(days=1)
     )
+
+    with test_app.app_context():
+        mocker.patch('app.dao.dao_coupon.CouponUser.query').filter.return_value.first.return_value = mock_coupon_user
 
     mocker.patch('app.index.load_coupon_by_code', return_value=mock_coupon)
 
@@ -239,19 +251,33 @@ def test_api_apply_coupon_not_logged_in(test_client, mocker):
     assert data['err_msg'] == 'Đăng nhập để có thể sử dụng mã giảm giá'
 
 
-def test_api_apply_coupon_override_existing(test_client, mocker):
+def test_api_apply_coupon_override_existing(test_app, test_client, mocker):
     class FakeUser:
         is_authenticated = True
+        id = 1
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
     mocker.patch('app.index.current_user', new=FakeUser())
 
+    mock_coupon_user = mocker.Mock(
+        user_id=1,
+        coupon_id=1,
+        usage_limitation=10
+    )
+
     mock_coupon = mocker.Mock(
+        id=1,
+        code='SALE15P',
         value=15,
-        coupon_type=CouponType.VARIABLE
+        coupon_type=CouponType.VARIABLE,
+        expiry_date = datetime.now() + timedelta(days=1)
     )
 
     mock_load = mocker.patch('app.index.load_coupon_by_code', return_value=mock_coupon)
+
+    with test_app.app_context():
+        mocker.patch('app.dao.dao_coupon.CouponUser.query').filter.return_value.first.return_value = mock_coupon_user
+
 
     with test_client.session_transaction() as sess:
         sess['cart'] = {

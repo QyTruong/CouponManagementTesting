@@ -1,4 +1,5 @@
 import math
+from datetime import datetime
 
 import stripe
 from flask import render_template, request, session, jsonify
@@ -6,7 +7,7 @@ from flask_login import login_user, logout_user, current_user
 from werkzeug.utils import redirect
 from app import app, utils, login
 from app.dao.dao_category import load_categories
-from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, load_coupon_by_code
+from app.dao.dao_coupon import count_used_coupons, load_coupons, apply_coupon, load_coupon_by_code, validate_usage_limitation, validate_expiry_date
 from app.dao.dao_coupon_user import load_coupons_by_user_id
 from app.dao.dao_product import load_products, load_product_by_id, count_products
 from app.dao.dao_user import add_user, auth_user, get_user_by_id
@@ -129,6 +130,13 @@ def register_routes(app):
                 return jsonify({'status': 200} | utils.stats_cart(cart))
             else:
                 coupon = load_coupon_by_code(code=code)
+
+                try:
+                    validate_usage_limitation(coupon=coupon)
+                    validate_expiry_date(coupon=coupon)
+                except ValueError as e:
+                    return jsonify({'status': 400, 'err_msg': str(e)} | utils.stats_cart(cart))
+
 
                 coupon_slot = {
                     'code': code,
