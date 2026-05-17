@@ -14,7 +14,7 @@ function applyCoupon(){
         if (data.status == 200){
             location.reload()
         }
-        else if (data.status == 401) {
+        else {
             alert(data.err_msg)
         }
     })
