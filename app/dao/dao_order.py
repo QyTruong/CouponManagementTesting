@@ -9,9 +9,9 @@ def load_order_by_id(id):
 
 def add_order(cart, cart_stats):
     if cart:
-        total_price = cart_stats['base_price']
+        total_price = cart_stats['total_price']
         discount = cart_stats['discount_value']
-        final_price = cart_stats['total_price']
+        final_price = cart_stats['final_price']
 
         o = Order(user=current_user, total_price=total_price, discount=discount, final_price=final_price)
         db.session.add(o)

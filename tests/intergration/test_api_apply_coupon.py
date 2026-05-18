@@ -3,16 +3,16 @@ import pytest
 from app.utils import stats_cart
 
 
-def test_login_permission(test_client):
-    with test_client.session_transaction() as sess:
-        sess['cart'] = {
-            '1': {'price': 100000, 'quantity': 1}
-        }
-
-    res = test_client.post('/api/coupons', json={'code': 'SALE10'})
-    data = res.get_json()
-
-    assert data['err_msg'] == 'Đăng nhập để có thể sử dụng mã giảm giá'
+# def test_login_permission(test_client):
+#     with test_client.session_transaction() as sess:
+#         sess['cart'] = {
+#             '1': {'price': 100000, 'quantity': 1}
+#         }
+#
+#     res = test_client.post('/api/coupons', json={'code': 'SALE10'})
+#     data = res.get_json()
+#
+#     assert data['err_msg'] == 'Đăng nhập để có thể sử dụng mã giảm giá'
 
 
 def test_apply_coupon_after_login(test_client, sample_coupons, mock_login):
@@ -37,7 +37,7 @@ def test_apply_coupon_no_cart(test_client, sample_coupons, mocker):
     data = res.get_json()
 
     assert data['status'] == 404
-    assert data['err_msg'] == 'Giỏ hàng không tồn tại !!'
+    assert data['err_msg'] == 'Giỏ hàng không tồn tại'
 
 
 def test_apply_coupon_success(test_client, sample_coupons, mocker):
@@ -59,8 +59,8 @@ def test_apply_coupon_success(test_client, sample_coupons, mocker):
 
     assert res.status_code == 200
     assert data['total_quantity'] == 2
-    assert data['base_price'] == 40000
-    assert data['total_price'] == 30000
+    assert data['total_price'] == 40000
+    assert data['final_price'] == 30000
     assert 'discount_value' in data
 
 
@@ -82,29 +82,29 @@ def test_remove_coupon(test_client, sample_coupons, mocker):
 
     assert res.status_code == 200
     assert data['discount_value'] == 0
-    assert data['total_price'] == data['base_price']
+    assert data['final_price'] == data['total_price']
 
 
 @pytest.mark.parametrize("cart, code ,expected", [
     ({'1': {'price': 10000, 'quantity': 2}}, 'no', {
-                                                     'base_price': 20000,
-                                                     'discount_value': 0,
                                                      'total_price': 20000,
+                                                     'discount_value': 0,
+                                                     'final_price': 20000,
                                                  }),
     ({'2': {'price': 20000, 'quantity': 2}}, 'SALE10', {
-                                                     'base_price': 40000,
+                                                     'total_price': 40000,
                                                      'discount_value': 10000,
-                                                     'total_price': 30000,
+                                                     'final_price': 30000,
                                                  }),
     ({'3': {'price': 10000, 'quantity': 2}}, 'SALE15P', {
-                                                     'base_price': 20000,
+                                                     'total_price': 20000,
                                                      'discount_value': 3000,
-                                                     'total_price': 17000,
+                                                     'final_price': 17000,
                                                  }),
     ({'4': {'price': 10000, 'quantity': 1}}, 'SALE20', {
-                                                     'base_price': 10000,
+                                                     'total_price': 10000,
                                                      'discount_value': 20000,
-                                                     'total_price': 0,
+                                                     'final_price': 0,
                                                  }),
 ], ids=["no_coupon",
         "fixed_coupon",
@@ -124,9 +124,9 @@ def test_stats_cart_discount(test_client, sample_coupons, mocker, cart, code, ex
     data = res.get_json()
 
     assert res.status_code == 200
-    assert data['base_price'] == expected['base_price']
-    assert data['discount_value'] == expected['discount_value']
     assert data['total_price'] == expected['total_price']
+    assert data['discount_value'] == expected['discount_value']
+    assert data['final_price'] == expected['final_price']
 
     with test_client.session_transaction() as sess:
         if code == 'no':

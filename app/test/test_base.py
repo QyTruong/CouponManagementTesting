@@ -149,22 +149,6 @@ def sample_coupons(test_session):
         expiry_date=datetime.now() + timedelta(days=30)
     )
 
-    # Những coupon hết hạn
-    coupon5 = Coupon(
-        code="SALE10",
-        active=True,
-        value=10000,
-        coupon_type=CouponType.FIXED,
-        expiry_date=datetime.now() - timedelta(days=30)
-    )
-    coupon6 = Coupon(
-        code="SALE15P",
-        active=True,
-        value=15,
-        coupon_type=CouponType.VARIABLE,
-        expiry_date=datetime.now()
-    )
-
     test_session.add_all([coupon1, coupon2, coupon3, coupon4])
     test_session.commit()
 
