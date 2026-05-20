@@ -4,9 +4,7 @@ function order(){
             method: "post"
         }).then(res => res.json()).then(data => {
             if (data.status == 200){
-                coupon_err_msg = ""
-                if (data.coupon_err_msg) coupon_err_msg = "\n\n[Lỗi] Mã không áp dụng được vì: " + data.coupon_err_msg
-                alert("[Thành công] Đặt hàng thành công" +  coupon_err_msg)
+                alert("Đặt hàng thành công")
                 location.reload()
             }
             else

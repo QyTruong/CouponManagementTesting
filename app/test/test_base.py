@@ -3,11 +3,12 @@ from datetime import datetime, timedelta
 
 import pytest
 from flask import Flask
-from flask_login import LoginManager
-
 from app import db
 from app.index import register_routes
 from app.models import Product, Category, User, UserRole, Coupon, CouponType, Order, CouponUser
+from flask_login import LoginManager
+
+login = LoginManager()
 
 
 def create_app():
@@ -15,15 +16,8 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     app.config['PAGE_SIZE'] = 2
     app.config['TESTING'] = True
-    app.config['LOGIN_DISABLED'] = True
     app.secret_key = "HVHVDIU*(D&V*YDV*&DV(*&DV(*"
     db.init_app(app)
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-
-    @login_manager.user_loader
-    def load_user(user_id):
-        return User.query.get(int(user_id))
 
     register_routes(app=app)
 
@@ -198,4 +192,4 @@ def mock_login(mocker):
         is_authenticated = True
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    # mocker.patch("app.dao.dao_order.current_user", new=FakeUser())
+    mocker.patch('app.index.current_user', new=FakeUser())
