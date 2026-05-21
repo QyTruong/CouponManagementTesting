@@ -1,6 +1,6 @@
-from app.test.pages.BasePage import BasePage
+from app.selenium_test.pages.BasePage import BasePage
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
+
 
 class AdminCouponPage(BasePage):
     URL_LIST = 'http://127.0.0.1:5000/admin/coupon/'

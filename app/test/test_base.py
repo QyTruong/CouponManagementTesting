@@ -1,6 +1,5 @@
 import hashlib
 from datetime import datetime, timedelta
-
 import pytest
 from flask import Flask
 from app import db

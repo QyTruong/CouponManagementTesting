@@ -1,5 +1,5 @@
 
-from app.test.pages.BasePage import BasePage
+from app.selenium_test.pages.BasePage import BasePage
 from selenium.webdriver.common.by import By
 
 

@@ -1,16 +1,13 @@
 import time
 
-from selenium.webdriver.support.expected_conditions import alert_is_present
-
-from app.test.pages.CartPage import CartPage
-from app.test.pages.HomePage import HomePage
-from app.test.pages.LoginPage import LoginPage
-from app.test.pages.RegisterPage import RegisterPage
-from app.test.pages.OrderPage import OrderPage
-from app.test.pages.AdminCouponPage import AdminCouponPage
+from app.selenium_test.pages.CartPage import CartPage
+from app.selenium_test.pages.HomePage import HomePage
+from app.selenium_test.pages.LoginPage import LoginPage
+from app.selenium_test.pages.RegisterPage import RegisterPage
+from app.selenium_test.pages.OrderPage import OrderPage
+from app.selenium_test.pages.AdminCouponPage import AdminCouponPage
 from app.test.test_base import driver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException
 
 
 def test_search_products(driver):
