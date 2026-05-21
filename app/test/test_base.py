@@ -1,12 +1,12 @@
 import hashlib
 from datetime import datetime, timedelta
-
 import pytest
 from flask import Flask
 from app import db
 from app.index import register_routes
 from app.models import Product, Category, User, UserRole, Coupon, CouponType, Order, CouponUser
-
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 
 def create_app():
     app = Flask(__name__)
@@ -180,3 +180,12 @@ def sample_coupon_users(test_session):
     test_session.commit()
 
     return [coupon_user1, coupon_user2, coupon_user3]
+
+
+@pytest.fixture()
+def driver():
+
+    options = webdriver.ChromeOptions()
+    driver = webdriver.Chrome(options=options)
+    yield driver
+    driver.quit()
