@@ -6,9 +6,6 @@ from flask import Flask
 from app import db
 from app.index import register_routes
 from app.models import Product, Category, User, UserRole, Coupon, CouponType, Order, CouponUser
-from flask_login import LoginManager
-
-login = LoginManager()
 
 
 def create_app():
