@@ -180,13 +180,3 @@ def sample_coupon_users(test_session):
     test_session.commit()
 
     return [coupon_user1, coupon_user2, coupon_user3]
-
-
-@pytest.fixture
-def mock_login(mocker):
-    class FakeUser:
-        id = 1
-        is_authenticated = True
-
-    mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    mocker.patch('app.index.current_user', new=FakeUser())
