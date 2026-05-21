@@ -55,19 +55,6 @@ def validate_value(value, coupon_type):
 def load_coupon_by_code(code):
     return Coupon.query.filter(Coupon.code.__eq__(code)).first()
 
-def validate_usage_limitation(coupon):
-    coupon_user = CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
-                                        CouponUser.user_id == current_user.id).first()
-
-    _, used_count = count_used_coupon(coupon_id=coupon.id)
-
-    if coupon_user is None:
-        raise ValueError('Bạn chưa được cấp quyền sử dụng mã giảm giá này')
-
-    if used_count >= coupon_user.usage_limitation:
-        raise ValueError('Mã giảm giá đã dùng quá số lần cho phép')
-
-
 def count_used_coupon(coupon_id):
     result = (db.session.query(
         Order.coupon_id,
@@ -93,13 +80,31 @@ def calculate_discount_value(order, coupon):
 
     return final_price if final_price >= 0 else 0
 
-# Áp dụng mã giảm giá
-def apply_coupon(order, coupon):
+def validate_usage_limitation(coupon):
+    coupon_user = CouponUser.query.filter(CouponUser.coupon_id.__eq__(coupon.id),
+                                        CouponUser.user_id == current_user.id).first()
+
+    _, used_count = count_used_coupon(coupon_id=coupon.id)
+
+    if coupon_user is None:
+        raise ValueError('Bạn chưa được cấp quyền sử dụng mã giảm giá này')
+
+    if used_count >= coupon_user.usage_limitation:
+        raise ValueError('Mã giảm giá đã dùng quá số lần cho phép')
+
+def validate_expiry_date(coupon):
     if coupon.expiry_date < datetime.now():
         raise ValueError('Mã này đã hết hạn sử dụng, áp dụng mã thất bại')
+
+def validate_duplicate_coupon(order):
     if order.coupon_id is not None:
         raise ValueError('Đơn hàng này đã được áp dụng mã giảm giá từ trước, áp dụng mã thất bại')
 
+# Áp dụng mã giảm giá
+def apply_coupon(order, coupon):
+
+    validate_expiry_date(coupon)
+    validate_duplicate_coupon(order)
     validate_usage_limitation(coupon=coupon)
 
     order.final_price = calculate_discount_value(order=order, coupon=coupon)
