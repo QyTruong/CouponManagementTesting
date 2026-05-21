@@ -56,11 +56,11 @@ def load_coupon_by_code(code):
     return Coupon.query.filter(Coupon.code.__eq__(code)).first()
 
 def count_used_coupon(coupon_id):
-    result = (db.session.query(
+    result = db.session.query(
         Order.coupon_id,
         func.count(Order.id)
-    ).filter(Order.coupon_id.__eq__(coupon_id))
-    .group_by(Order.coupon_id).first())
+    ).filter(Order.coupon_id.__eq__(coupon_id))\
+    .group_by(Order.coupon_id).first()
 
     if result is None:
         return (coupon_id, 0)
