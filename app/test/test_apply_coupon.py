@@ -22,10 +22,12 @@ def test_calculate_discount(coupon_type, value, total_price, expected, mocker):
 
 
 def test_validate_no_permission(mocker, test_app):
-    coupon = MagicMock(id=1)
-    fake_user = MagicMock(id=1)
+    class FakeUser:
+        id = 1
 
-    mocker.patch('app.dao.dao_coupon.current_user', fake_user)
+    coupon = MagicMock(id=1)
+
+    mocker.patch('app.dao.dao_coupon.current_user', return_value=FakeUser())
 
     with test_app.app_context():
         with patch('app.dao.dao_coupon.CouponUser.query') as mock_query:
@@ -36,9 +38,11 @@ def test_validate_no_permission(mocker, test_app):
 
 
 def test_validate_exceed_usage(mocker, test_app):
+    class FakeUser:
+        id = 1
+
     coupon = MagicMock(id=1)
-    fake_user = MagicMock(id=1)
-    mocker.patch('app.dao.dao_coupon.current_user', fake_user)
+    mocker.patch('app.dao.dao_coupon.current_user', return_value=FakeUser())
 
     coupon_user = mocker.Mock(usage_limitation=10)
 
@@ -85,13 +89,13 @@ def test_apply_coupon_success(mocker):
 
     mock_usage_limitation = mocker.patch('app.dao.dao_coupon.validate_usage_limitation')
 
-    mock_calc_discount = mocker.patch('app.dao.dao_coupon.calculate_discount_value', return_value=1000)
+    mock_calc_discount = mocker.patch('app.dao.dao_coupon.calculate_discount_value', return_value=10000)
 
     mock_commit = mocker.patch('app.dao.dao_coupon.db.session.commit')
 
     apply_coupon(order, coupon)
 
-    assert order.final_price == 1000
+    assert order.final_price == 10000
     assert order.coupon == coupon
 
     mock_usage_limitation.assert_called_once_with(coupon=coupon)
@@ -133,7 +137,7 @@ def test_api_apply_coupon_no_cart(test_client, mocker):
         is_authenticated = True
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    mocker.patch('app.index.current_user', new=FakeUser())
+    mocker.patch('app.index.current_user', return_value=FakeUser())
 
     res = test_client.post("api/coupons", json={
         "code": "SALE10"
@@ -150,7 +154,7 @@ def test_api_apply_coupon_detach_from_cart(test_client, mocker):
         is_authenticated = True
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    mocker.patch('app.index.current_user', new=FakeUser())
+    mocker.patch('app.index.current_user', return_value=FakeUser())
 
     with test_client.session_transaction() as sess:
         sess['cart'] = {
@@ -164,7 +168,7 @@ def test_api_apply_coupon_detach_from_cart(test_client, mocker):
         sess['coupon_slot'] = {
             'code': 'SALE10',
             'value': 10000,
-            'coupon_type': 'tiền mặt'
+            'coupon_type': 'FIXED'
         }
 
     res = test_client.post("/api/coupons", json={
@@ -189,7 +193,7 @@ def test_api_apply_coupon_to_cart_success(test_app, mocker, test_client):
         id = 1
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    mocker.patch('app.index.current_user', new=FakeUser())
+    mocker.patch('app.index.current_user', return_value=FakeUser())
 
     mock_coupon_user = mocker.Mock(
         user_id=1,
@@ -257,7 +261,7 @@ def test_api_apply_coupon_override_existing(test_app, test_client, mocker):
         id = 1
 
     mocker.patch("flask_login.utils._get_user", return_value=FakeUser())
-    mocker.patch('app.index.current_user', new=FakeUser())
+    mocker.patch('app.index.current_user', return_value=FakeUser())
 
     mock_coupon_user = mocker.Mock(
         user_id=1,

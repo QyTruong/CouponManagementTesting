@@ -1,6 +1,4 @@
 import math
-from datetime import datetime
-
 import stripe
 from flask import render_template, request, session, jsonify
 from flask_login import login_user, logout_user, current_user
@@ -162,7 +160,6 @@ def register_routes(app):
     def order():
         cart = session.get('cart')
         coupon_slot = session.get('coupon_slot')
-        coupon_err_msg = None
 
         try:
             order = add_order(cart=cart, cart_stats=utils.stats_cart(cart=cart))
@@ -221,11 +218,13 @@ def register_routes(app):
 
             if user:
                 login_user(user=user)
-        except Exception as e:
+            else:
+                return render_template('login.html', err_msg="Thông tin đăng nhập sai, vui lòng đăng nhập lại")
+        except ValueError as e:
             return render_template('login.html', err_msg=str(e))
 
         next = request.args.get('next')
-        print(next)
+
         return redirect(next if next else '/')
 
 
@@ -258,7 +257,6 @@ def register_routes(app):
 
         metadata = {
             "order_id": order_id,
-            "user_id": order.user.id,
         }
 
         stripe_payment = StripePayment(items=items)
